@@ -1,0 +1,34 @@
+name: Cargo Build & Test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env: 
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build_and_test:
+    name: Rust project - latest
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        toolchain:
+          - stable
+          - beta
+          - nightly
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
+      - run: cargo build --verbose
+      - run: cargo test --verbose
+      - run: cargo build --verbose --features derive
+      - run: cargo test --verbose --features derive
+      - if: matrix.toolchain == 'nightly'
+        run: |
+          cargo build --verbose --features nightly
+          cargo test --verbose --features nightly
+          cargo build --verbose --features derive,nightly
+          cargo test --verbose --features derive,nightly
