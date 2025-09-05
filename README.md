@@ -1,3 +1,6 @@
+[![Cargo Build & Test](https://github.com/nujievik/rust_is_default/actions/workflows/rust.yml/badge.svg)](
+https://github.com/nujievik/rust_is_default/actions/workflows/rust.yml)
+
 A unified API for checking if a value is default, with easy derive
 support for custom types.
 
