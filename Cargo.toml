@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "is_default",
+    "is_default_derive"
+]
+
+resolver = "1"
