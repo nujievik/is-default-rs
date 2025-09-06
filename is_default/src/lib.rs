@@ -135,9 +135,9 @@ use std::{
     ffi::{CStr, CString, OsStr, OsString},
     io::Cursor,
     num::Wrapping,
+    ops::Deref,
     path::{Path, PathBuf},
     rc::Rc,
-    ops::Deref,
     sync::{
         Arc, Mutex, OnceLock, RwLock, Weak,
         atomic::{
@@ -586,7 +586,7 @@ impl<T> IsDefault for Cursor<T> {
 
 impl<T> IsDefault for [T]
 where
-    T: IsDefault
+    T: IsDefault,
 {
     /// Always returns `true` if slice is empty.
     /// Otherwise, returns `true` if all slice elements is default.
