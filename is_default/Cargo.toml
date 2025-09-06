@@ -1,10 +1,10 @@
 [package]
 name = "is_default"
-version = "1.0.0"
+version = "1.1.0"
 authors = ["Ivan Reutov <nujievik@gmail.com>"]
 edition = "2024"
 rust-version = "1.85"
-description = "A unified API for checking if a value is default, with easy derive support for custom types."
+description = "A trait for checking if a value is default, with easy derive support for custom types."
 repository = "https://github.com/nujievik/rust_is_default"
 license = "MIT OR Apache-2.0"
 keywords = ["api"]

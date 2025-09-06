@@ -1,6 +1,6 @@
-//! # is_default
+//! # IsDefault
 //!
-//! A unified API for checking if a value is default, with easy derive support for custom types.
+//! A trait for checking if a value is default, with easy derive support for custom types.
 //!
 //! Example, instead of `is_none` for [`Option`] and `is_empty` for [`Vec`]
 //! can be used `is_default` for all.
@@ -17,7 +17,19 @@
 //! The `IsDefault` trait is implemented for most standard types.
 //! With the `derive` feature, you can easily generate implementations for your own types:
 //!
-//! ## Structs
+//! ## Derive
+//!
+//! To use the derive macro, add the dependency with the `derive` feature
+//! in your `Cargo.toml`:
+//!
+//! ```toml
+//! # Cargo.toml
+//!
+//! [dependencies]
+//! is_default = { version = "1", features = ["derive"] }
+//! ```
+//!
+//! ### Structs
 //!
 //! A struct can derive `IsDefault` if all its fields implement `IsDefault`.
 //!
@@ -38,46 +50,62 @@
 //! struct Point { x: i16, y: f32 }
 //! assert!(Point{ x: 0, y: 0.0 }.is_default());
 //! assert!(!Point{ x: 1, y: 0.0 }.is_default());
-//! assert!(!Point{ x: 0, y: 0.1 }.is_default());
+//! assert!(!Point{ x: 0, y: 1.1 }.is_default());
 //! # }
 //! ```
 //!
-//! ## Enums
+//! ### Enums
 //!
-//! Enums can derive `IsDefault` using the `#[is_default]` or `#[default]` attribute.
-//! This allows deriving both `Default` and `IsDefault` using the same attribute.
+//! An enum can derive `IsDefault` using either the `#[is_default]` OR the
+//! `#[default]` attribute. This makes it possible to derive both `Default`
+//! and `IsDefault` using the same attribute.
 //!
 //! ```rust
 //! # #[cfg(feature = "derive")] {
 //! use is_default::IsDefault;
 //!
 //! #[derive(IsDefault)]
-//! enum X {
-//!     A,
+//! enum A {
 //!     #[is_default]
-//!     B,
+//!     X,
+//!     Y,
 //! }
-//! assert!(X::B.is_default());
-//! assert!(!X::A.is_default());
-//!
-//! #[derive(IsDefault)]
-//! enum Y {
-//!     #[default]
-//!     A,
-//!     B,
-//! }
-//! assert!(Y::A.is_default());
-//! assert!(!Y::B.is_default());
+//! assert!(A::X.is_default());
+//! assert!(!A::Y.is_default());
 //!
 //! #[derive(Default, IsDefault)]
-//! enum Z {
-//!     A,
+//! enum B {
+//!     X,
 //!     #[default]
-//!     B,
+//!     Y,
 //! }
-//! assert!(Z::B.is_default());
-//! assert!(!Z::A.is_default());
-//! assert!(matches!(Z::default(), Z::B));
+//! assert!(!B::X.is_default());
+//! assert!(B::Y.is_default());
+//! assert!(matches!(B::default(), B::Y));
+//! # }
+//! ```
+//!
+//! An enum can also derive `IsDefault` if it implements both `Default` and
+//! `PartialEq`. However, this implementation may be inefficient, since a
+//! `Self` object must be allocated for comparison.
+//!
+//! ```rust
+//! # #[cfg(feature = "derive")] {
+//! use is_default::IsDefault;
+//!
+//! #[derive(PartialEq, IsDefault)]
+//! enum C {
+//!     X(u8),
+//!     Y,
+//! }
+//! impl Default for C {
+//!     fn default() -> C {
+//!         C::X(0)
+//!     }
+//! }
+//!
+//! assert!(C::X(0).is_default());
+//! assert!(!C::X(1).is_default());
 //! # }
 //! ```
 
@@ -101,13 +129,15 @@ pub trait IsDefault {
 use std::ascii::Char;
 
 use std::{
+    borrow::Cow,
     cell::{Cell, OnceCell, RefCell},
     collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedList, VecDeque},
-    ffi::{CStr, OsStr},
+    ffi::{CStr, CString, OsStr, OsString},
     io::Cursor,
     num::Wrapping,
-    path::Path,
+    path::{Path, PathBuf},
     rc::Rc,
+    ops::Deref,
     sync::{
         Arc, Mutex, OnceLock, RwLock, Weak,
         atomic::{
@@ -270,17 +300,16 @@ atomic_impl!(AtomicU32, 0; 1, u32::MAX);
 atomic_impl!(AtomicU64, 0; 1, u64::MAX);
 atomic_impl!(AtomicUsize, 0; 1, usize::MAX);
 
-macro_rules! unsized_impl {
-    ($t:ty, $v:expr, $own:ty $(, $use:literal)? ; $( $not:expr ),* ) => {
+macro_rules! str_impl {
+    ($t:ty, $v:expr $(, $use:literal)? ; $not:expr) => {
         impl IsDefault for $t {
             /// Returns `true` if self is empty.
             /// ```
             /// use is_default::IsDefault;
-            $( #[doc = concat!("use ", $use, ";")] )?
+            $( #[doc = concat!("use std::ffi::", $use, ";")] )?
             ///
             #[doc = concat!("assert!(", stringify!($v), ".is_default());")]
-            #[doc = concat!("assert!(", stringify!($own), "::default().is_default());")]
-            $( #[doc = concat!("assert!(!", stringify!($not), ".is_default());")] )*
+            #[doc = concat!("assert!(!", stringify!($not), ".is_default());")]
             /// ```
             #[inline(always)]
             fn is_default(&self) -> bool {
@@ -290,25 +319,34 @@ macro_rules! unsized_impl {
     };
 }
 
-unsized_impl!(str, "", String; "x");
-unsized_impl!(CStr, c"", CString, "std::ffi::CString"; c"x");
-unsized_impl!(OsStr, OsStr::new(""), OsString, "std::ffi::{OsStr, OsString}"; OsStr::new("x"));
+str_impl!(str, ""; "x");
+str_impl!(String, String::from(""); String::from("x"));
+str_impl!(CStr, c""; c"x");
+str_impl!(CString, CString::from(c""), "CString"; CString::from(c"x"));
+str_impl!(OsStr, OsStr::new(""), "OsStr"; OsStr::new("x"));
+str_impl!(OsString, OsString::from(""), "OsString"; OsString::from("x"));
 
-impl IsDefault for Path {
-    /// Returns `true` if self is empty.
-    /// ```
-    /// use is_default::IsDefault;
-    /// use std::path::{Path, PathBuf};
-    ///
-    /// assert!(Path::new("").is_default());
-    /// assert!(PathBuf::default().is_default());
-    /// assert!(!Path::new("x").is_default());
-    /// ```
-    #[inline(always)]
-    fn is_default(&self) -> bool {
-        self.as_os_str().is_empty()
-    }
+macro_rules! path_impl {
+    ($t:ty, $new:literal) => {
+        impl IsDefault for $t {
+            /// Returns `true` if self is empty.
+            /// ```
+            /// use is_default::IsDefault;
+            #[doc = concat!("use std::path::", stringify!($t), ";")]
+            ///
+            #[doc = concat!("assert!(", stringify!($t), "::", $new, "(\"\").is_default());\n")]
+            #[doc = concat!("assert!(!", stringify!($t), "::", $new, "(\"x\").is_default());\n")]
+            /// ```
+            #[inline(always)]
+            fn is_default(&self) -> bool {
+                self.as_os_str().is_empty()
+            }
+        }
+    };
 }
+
+path_impl!(Path, "new");
+path_impl!(PathBuf, "from");
 
 impl IsDefault for Duration {
     /// Returns `true` if self is zero.
@@ -338,20 +376,6 @@ impl<T> IsDefault for Option<T> {
     #[inline(always)]
     fn is_default(&self) -> bool {
         self.is_none()
-    }
-}
-
-impl<T> IsDefault for [T] {
-    /// Returns `true` if self is empty.
-    /// ```
-    /// use is_default::IsDefault;
-    ///
-    /// assert!(&[0u8; 0].is_default());
-    /// assert!(!&[0u8; 1].is_default());
-    /// ```
-    #[inline(always)]
-    fn is_default(&self) -> bool {
-        self.is_empty()
     }
 }
 
@@ -429,6 +453,24 @@ macro_rules! pointer_impl {
 pointer_impl!(Arc, "std::sync::Arc");
 pointer_impl!(Box);
 pointer_impl!(Rc, "std::rc::Rc");
+
+impl<T> IsDefault for Cow<'_, T>
+where
+    T: IsDefault + ToOwned + ?Sized,
+{
+    /// Returns `true` if the inner value is default.
+    /// ```
+    /// use is_default::IsDefault;
+    /// use std::borrow::Cow;
+    ///
+    /// assert!(Cow::from("").is_default());
+    /// assert!(!Cow::from("x").is_default());
+    /// ```
+    #[inline(always)]
+    fn is_default(&self) -> bool {
+        self.deref().is_default()
+    }
+}
 
 macro_rules! lock_impl {
     ($t:ident, $lock:ident, $use:literal) => {
@@ -539,5 +581,103 @@ impl<T> IsDefault for Cursor<T> {
     #[inline(always)]
     fn is_default(&self) -> bool {
         matches!(self.position(), 0u64)
+    }
+}
+
+impl<T> IsDefault for [T]
+where
+    T: IsDefault
+{
+    /// Always returns `true` if slice is empty.
+    /// Otherwise, returns `true` if all slice elements is default.
+    /// ```
+    /// use is_default::IsDefault;
+    ///
+    /// assert!(<&[i32]>::default().is_default());
+    /// assert!(&[0].is_default());
+    /// assert!(!&[1].is_default());
+    /// ```
+    #[inline(always)]
+    fn is_default(&self) -> bool {
+        if self.is_empty() {
+            true
+        } else {
+            self.iter().all(|x| x.is_default())
+        }
+    }
+}
+
+impl<T, const N: usize> IsDefault for [T; N]
+where
+    T: IsDefault,
+{
+    /// Always returns `true` for array [T; 0].
+    /// Otherwise, returns `true` if all array elements is default.
+    /// ```
+    /// use is_default::IsDefault;
+    ///
+    /// assert!([1u8; 0].is_default());
+    /// assert!([0u8].is_default());
+    /// assert!(![1u8].is_default());
+    /// ```
+    #[inline(always)]
+    fn is_default(&self) -> bool {
+        self.as_slice().is_default()
+    }
+}
+
+impl<T> IsDefault for &T
+where
+    T: IsDefault + ?Sized,
+{
+    /// Delegates to the implementation of [`IsDefault`] for `T`.
+    ///
+    /// This allows automatically deriving [`IsDefault`] for structs
+    /// that contain `&T` fields.
+    ///
+    /// ```
+    /// # #[cfg(feature = "derive")] {
+    /// use is_default::IsDefault;
+    ///
+    /// #[derive(IsDefault)]
+    /// struct Ref<'a>(&'a u8);
+    ///
+    /// let x = 0u8;
+    /// assert!(Ref(&x).is_default());
+    /// let y = 1u8;
+    /// assert!(!Ref(&y).is_default());
+    /// # }
+    /// ```
+    #[inline(always)]
+    fn is_default(&self) -> bool {
+        (**self).is_default()
+    }
+}
+
+impl<T> IsDefault for &mut T
+where
+    T: IsDefault + ?Sized,
+{
+    /// Delegates to the implementation of [`IsDefault`] for `T`.
+    ///
+    /// This allows automatically deriving [`IsDefault`] for structs
+    /// that contain `&mut T` fields.
+    ///
+    /// ```
+    /// # #[cfg(feature = "derive")] {
+    /// use is_default::IsDefault;
+    ///
+    /// #[derive(IsDefault)]
+    /// struct MutRef<'a>(&'a mut u8);
+    ///
+    /// let mut a = 0u8;
+    /// assert!(MutRef(&mut a).is_default());
+    /// let mut b = 1u8;
+    /// assert!(!MutRef(&mut b).is_default());
+    /// # }
+    /// ```
+    #[inline(always)]
+    fn is_default(&self) -> bool {
+        (**self).is_default()
     }
 }
