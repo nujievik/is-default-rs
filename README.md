@@ -1,5 +1,5 @@
-[![Cargo Build & Test](https://github.com/nujievik/rust_is_default/actions/workflows/rust.yml/badge.svg)](
-https://github.com/nujievik/rust_is_default/actions/workflows/rust.yml)
+[![Cargo Build & Test](https://github.com/nujievik/is-default-rs/actions/workflows/rust.yml/badge.svg)](
+https://github.com/nujievik/is-default-rs/actions/workflows/rust.yml)
 
 A trait for checking if a value is default, with easy derive support
 for custom types.
@@ -16,9 +16,9 @@ assert!(None::<u8>.is_default());
 assert!(Vec::<u8>::new().is_default());
 ```
 
-The `IsDefault` trait is implemented for most standard types.
-With the `derive` feature, you can easily generate implementations for
-your own types:
+The `IsDefault` trait is implemented for most standard types that
+has `Default` impl. With the `derive` feature, you can easily generate
+implementations for your own types:
 
 ## Derive
 
@@ -29,7 +29,7 @@ in your `Cargo.toml`:
 # Cargo.toml
 
 [dependencies]
-is_default = { version = "1", features = ["derive"] }
+is_default = { version = "0.1", features = ["derive"] }
 ```
 
 ### Structs
@@ -57,9 +57,12 @@ assert!(!Point{ x: 0, y: 1.1 }.is_default());
 
 ### Enums
 
-An enum can derive `IsDefault` using either the `#[is_default]` OR the
-`#[default]` attribute. This makes it possible to derive both `Default`
-and `IsDefault` using the same attribute.
+When using #[derive(IsDefault)] on an enum, you need to choose which
+unit variant will be default. You do this by placing the #[is_default]
+OR #[default] attribute on the variant.
+
+This makes it possible to derive both `Default` and `IsDefault` using
+the same attribute.
 
 ```rust
 use is_default::IsDefault;
@@ -84,9 +87,9 @@ assert!(B::Y.is_default());
 assert!(matches!(B::default(), B::Y));
 ```
 
-An enum can also derive `IsDefault` if it implements both `Default` and
-`PartialEq`. However, this implementation may be inefficient, since a
-new `Self` object must be allocated for comparison.
+Also #[derive(IsDefault)] on an enum possible if it implements both
+`Default` and `PartialEq`. However, this implementation may be
+inefficient, since a new `Self` object must be allocated for comparison.
 
 ```rust
 use is_default::IsDefault;

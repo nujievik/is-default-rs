@@ -1,11 +1,11 @@
 [package]
 name = "is_default"
-version = "1.1.0"
+version = "0.1.0"
 authors = ["Ivan Reutov <nujievik@gmail.com>"]
 edition = "2024"
 rust-version = "1.85"
 description = "A trait for checking if a value is default, with easy derive support for custom types."
-repository = "https://github.com/nujievik/rust_is_default"
+repository = "https://github.com/nujievik/is-default-rs"
 license = "MIT OR Apache-2.0"
 keywords = ["api"]
 categories = ["rust-patterns"]
@@ -16,4 +16,4 @@ derive = ["is_default_derive"]
 nightly = []
 
 [dependencies]
-is_default_derive = { version = "1.0.0", path = "../is_default_derive", optional = true }
+is_default_derive = { version = "0.1.0", path = "../is_default_derive", optional = true }
