@@ -13,22 +13,26 @@ jobs:
   build_and_test:
     name: Rust project - latest
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
-        toolchain:
-          - stable
-          - beta
-          - nightly
+        toolchain: [stable, beta, nightly]
+        stable-features:
+          - ""
+          - "default"
+          - "derive"
+          - "std"
+          - "via_default_eq"
+          - "default,via_default_eq"
+
     steps:
       - uses: actions/checkout@v4
       - run: rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
-      - run: cargo build --verbose
-      - run: cargo test --verbose
-      - run: cargo build --verbose --features derive
-      - run: cargo test --verbose --features derive
+
+      - run: cargo test --verbose --no-default-features --features "${{ matrix['stable-features'] }}"
+      - run: cargo test --verbose --no-default-features --features "${{ matrix['stable-features'] }}" --release
+
       - if: matrix.toolchain == 'nightly'
         run: |
-          cargo build --verbose --features nightly
-          cargo test --verbose --features nightly
-          cargo build --verbose --features derive,nightly
-          cargo test --verbose --features derive,nightly
+          cargo test --verbose --no-default-features --features "${{ matrix['stable-features'] }},nightly"
+          cargo test --verbose --no-default-features --features "${{ matrix['stable-features'] }},nightly" --release
