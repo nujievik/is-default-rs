@@ -1,29 +1,19 @@
 [![Cargo Build & Test](https://github.com/nujievik/is-default-rs/actions/workflows/rust.yml/badge.svg)](
 https://github.com/nujievik/is-default-rs/actions/workflows/rust.yml)
 
-A trait for checking if a value is default, with easy derive support
-for custom types.
+A trait for checking whether a value is the default, with convenient
+derive support for custom types.
 
-Example, instead of `is_none` for `Option` and `is_empty` for `Vec`
-can be used `is_default` for all.
+The default value is defined as the value returned by the `Default`
+trait. Therefore, any implementation of `IsDefault` must ensure that
+`self == &Self::default()` holds true.
 
-```rust
-assert!(None::<u8>.is_none());
-assert!(Vec::<u8>::new().is_empty());
-
-use is_default::IsDefault;
-assert!(None::<u8>.is_default());
-assert!(Vec::<u8>::new().is_default());
-```
-
-The `IsDefault` trait is implemented for most standard types that
-has `Default` impl. With the `derive` feature, you can easily generate
-implementations for your own types:
 
 ## Derive
 
-To use the derive macro, add the dependency with the `derive` feature
-in your `Cargo.toml`:
+The `IsDefault` trait is already implemented for most core and std
+types that implement `Default`. For custom types, you can derive
+`IsDefault` using derive:
 
 ```toml
 # Cargo.toml
@@ -34,11 +24,13 @@ is_default = { version = "0.1", features = ["derive"] }
 
 ### Structs
 
-A struct can derive `IsDefault` if all its fields implement `IsDefault`.
+A struct can derive` IsDefault` if all of its fields implement
+`IsDefault`:
 
 ```rust
-use is_default::IsDefault;
-
+# #[cfg(feature = "derive")] {
+# use is_default::IsDefault;
+#
 #[derive(IsDefault)]
 struct Unit;
 assert!(Unit.is_default());
@@ -53,20 +45,19 @@ struct Point { x: i16, y: f32 }
 assert!(Point{ x: 0, y: 0.0 }.is_default());
 assert!(!Point{ x: 1, y: 0.0 }.is_default());
 assert!(!Point{ x: 0, y: 1.1 }.is_default());
+}
 ```
 
 ### Enums
 
-When using #[derive(IsDefault)] on an enum, you need to choose which
-unit variant will be default. You do this by placing the #[is_default]
-OR #[default] attribute on the variant.
-
-This makes it possible to derive both `Default` and `IsDefault` using
-the same attribute.
+When deriving `IsDefault` for an enum, you must specify which unit
+variant should be considered the default. This is done by applying
+the #[is_default] or #[default] attribute to the variant:
 
 ```rust
-use is_default::IsDefault;
-
+# #[cfg(feature = "derive")] {
+# use is_default::IsDefault;
+#
 #[derive(IsDefault)]
 enum A {
     #[is_default]
@@ -75,7 +66,15 @@ enum A {
 }
 assert!(A::X.is_default());
 assert!(!A::Y.is_default());
+}
+```
 
+#[default] attribute possible to derive both `Default` and `IsDefault`:
+
+```rust
+# #[cfg(feature = "derive")] {
+# use is_default::IsDefault;
+#
 #[derive(Default, IsDefault)]
 enum B {
     X,
@@ -85,15 +84,17 @@ enum B {
 assert!(!B::X.is_default());
 assert!(B::Y.is_default());
 assert!(matches!(B::default(), B::Y));
+}
 ```
 
-Also #[derive(IsDefault)] on an enum possible if it implements both
-`Default` and `PartialEq`. However, this implementation may be
-inefficient, since a new `Self` object must be allocated for comparison.
+You can also derive `IsDefault` for enums that implement both `Default`
+and `PartialEq`. This approach is more general but may be less
+efficient, since a new value must be allocated for comparison:
 
 ```rust
-use is_default::IsDefault;
-
+# #[cfg(all(feature = "derive", not(feature = "via_default_eq")))] {
+# use is_default::IsDefault;
+#
 #[derive(PartialEq, IsDefault)]
 enum C {
     X(u8),
@@ -107,4 +108,77 @@ impl Default for C {
 
 assert!(C::X(0).is_default());
 assert!(!C::X(1).is_default());
+}
+```
+
+
+## no_std
+
+For `no_std` builds, add `is_default` to your `Cargo.toml` with default
+features disabled:
+
+```toml
+# Cargo.toml
+
+[dependencies]
+is_default = { version = "0.1.1", default-features = false, features = ["derive"] }
+```
+
+
+## via_default_eq
+
+By default, `IsDefault` is manually implemented for core and std types.
+This approach is fast and has no trait dependencies but requires manual
+implementation for custom types.
+
+Alternatively, you can enable a generic implementation of `IsDefault`
+for all types that implement both `Default` and `PartialEq`. This is
+the simplest option, but it may be less efficient, as it allocates a
+new value for comparison:
+
+```toml
+# Cargo.toml
+
+[dependencies]
+is_default = { version = "0.1.1", features = ["via_default_eq"] }
+```
+
+
+## Nightly
+
+Nightly-only types are supported via feature flags. This includes all
+belows unstable types:
+
+```toml
+# Cargo.toml
+
+[dependencies]
+is_default = { version = "0.1", features = ["nightly"] }
+```
+
+### ascii_char
+
+```toml
+# Cargo.toml
+
+[dependencies]
+is_default = { version = "0.1.1", features = ["ascii_char"] }
+```
+
+### f16
+
+```toml
+# Cargo.toml
+
+[dependencies]
+is_default = { version = "0.1.1", features = ["f16"] }
+```
+
+### f128
+
+```toml
+# Cargo.toml
+
+[dependencies]
+is_default = { version = "0.1.1", features = ["f128"] }
 ```

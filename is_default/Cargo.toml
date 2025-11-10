@@ -1,19 +1,24 @@
 [package]
 name = "is_default"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Ivan Reutov <nujievik@gmail.com>"]
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.85.0"
 description = "A trait for checking if a value is default, with easy derive support for custom types."
 repository = "https://github.com/nujievik/is-default-rs"
 license = "MIT OR Apache-2.0"
-keywords = ["api"]
+keywords = ["api", "no_std"]
 categories = ["rust-patterns"]
 
 [features]
-default = []
+default = ["derive", "std"]
 derive = ["is_default_derive"]
-nightly = []
+std = []
+via_default_eq = []
+nightly = ["ascii_char", "f16", "f128"]
+ascii_char = []
+f16 = []
+f128 = []
 
 [dependencies]
 is_default_derive = { version = "0.1.0", path = "../is_default_derive", optional = true }
