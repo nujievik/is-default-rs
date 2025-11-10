@@ -32,6 +32,13 @@ jobs:
       - run: cargo test --verbose --no-default-features --features "${{ matrix['stable-features'] }}"
       - run: cargo test --verbose --no-default-features --features "${{ matrix['stable-features'] }}" --release
 
+      - if: matrix.toolchain == 'stable' && matrix.stable-features == ''
+        name: Build no_std only target
+        run: |
+          rustup target add x86_64-unknown-none
+          cargo build --verbose --no-default-features --target x86_64-unknown-none
+          cargo build --verbose --no-default-features --target x86_64-unknown-none --release
+
       - if: matrix.toolchain == 'nightly'
         run: |
           cargo test --verbose --no-default-features --features "${{ matrix['stable-features'] }},nightly"
