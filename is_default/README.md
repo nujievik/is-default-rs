@@ -1,4 +1,4 @@
-[![Cargo Build & Test](https://github.com/nujievik/is-default-rs/actions/workflows/rust.yml/badge.svg)](
+[![Tests](https://github.com/nujievik/is-default-rs/actions/workflows/rust.yml/badge.svg)](
 https://github.com/nujievik/is-default-rs/actions/workflows/rust.yml)
 
 A trait for checking whether a value is the default, with convenient
@@ -9,7 +9,25 @@ trait. Therefore, any implementation of `IsDefault` must ensure that
 `self == &Self::default()` holds true.
 
 
-## Derive
+## Features
+
+| Feature             | Default | Description                   |
+|---------------------|---------|-------------------------------|
+| `derive`            | yes     | Derive trait for a type       |
+| `std`               | yes     | Implements for std-types      |
+| `via_default_eq`    | no      | Generic implementation via `Default` & `PartialEq` |
+
+Nightly-only:
+
+| Nightly Feature     | Default | Description                   |
+|---------------------|---------|-------------------------------|
+| `nightly`           | no      | Enable all below nightly features |
+| `ascii_char`        | no      | Core `ascii_char`             |
+| `f16`               | no      | Core `f16`                    |
+| `f128`              | no      | Core `f128`                   |
+
+
+### Derive
 
 The `IsDefault` trait is already implemented for most core and std
 types that implement `Default`. For custom types, you can derive
@@ -22,7 +40,7 @@ types that implement `Default`. For custom types, you can derive
 is_default = { version = "0.1", features = ["derive"] }
 ```
 
-### Structs
+#### Structs
 
 A struct can derive` IsDefault` if all of its fields implement
 `IsDefault`:
@@ -45,10 +63,10 @@ struct Point { x: i16, y: f32 }
 assert!(Point{ x: 0, y: 0.0 }.is_default());
 assert!(!Point{ x: 1, y: 0.0 }.is_default());
 assert!(!Point{ x: 0, y: 1.1 }.is_default());
-}
+# }
 ```
 
-### Enums
+#### Enums
 
 When deriving `IsDefault` for an enum, you must specify which unit
 variant should be considered the default. This is done by applying
@@ -66,7 +84,7 @@ enum A {
 }
 assert!(A::X.is_default());
 assert!(!A::Y.is_default());
-}
+# }
 ```
 
 #[default] attribute possible to derive both `Default` and `IsDefault`:
@@ -84,7 +102,7 @@ enum B {
 assert!(!B::X.is_default());
 assert!(B::Y.is_default());
 assert!(matches!(B::default(), B::Y));
-}
+# }
 ```
 
 You can also derive `IsDefault` for enums that implement both `Default`
@@ -108,24 +126,10 @@ impl Default for C {
 
 assert!(C::X(0).is_default());
 assert!(!C::X(1).is_default());
-}
+# }
 ```
 
-
-## no_std
-
-For `no_std` builds, add `is_default` to your `Cargo.toml` with default
-features disabled:
-
-```toml
-# Cargo.toml
-
-[dependencies]
-is_default = { version = "0.1.1", default-features = false, features = ["derive"] }
-```
-
-
-## via_default_eq
+### via_default_eq
 
 By default, `IsDefault` is manually implemented for core and std types.
 This approach is fast and has no trait dependencies but requires manual
@@ -144,41 +148,14 @@ is_default = { version = "0.1.1", features = ["via_default_eq"] }
 ```
 
 
-## Nightly
+## no_std
 
-Nightly-only types are supported via feature flags. This includes all
-belows unstable types:
-
-```toml
-# Cargo.toml
-
-[dependencies]
-is_default = { version = "0.1", features = ["nightly"] }
-```
-
-### ascii_char
+For `no_std` builds, add `is_default` to your `Cargo.toml` with default
+features disabled:
 
 ```toml
 # Cargo.toml
 
 [dependencies]
-is_default = { version = "0.1.1", features = ["ascii_char"] }
-```
-
-### f16
-
-```toml
-# Cargo.toml
-
-[dependencies]
-is_default = { version = "0.1.1", features = ["f16"] }
-```
-
-### f128
-
-```toml
-# Cargo.toml
-
-[dependencies]
-is_default = { version = "0.1.1", features = ["f128"] }
+is_default = { version = "0.1.1", default-features = false, features = ["derive"] }
 ```
