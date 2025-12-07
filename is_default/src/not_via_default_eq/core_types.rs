@@ -62,3 +62,16 @@ where
         self.as_slice().is_default()
     }
 }
+
+#[cfg(feature = "ascii_char")]
+mod ascii_char {
+    use core::ascii::Char;
+
+    impl crate::IsDefault for Char {
+        /// Returns `true` if self is `Char::Null`.
+        #[inline]
+        fn is_default(&self) -> bool {
+            matches!(self, Char::Null)
+        }
+    }
+}

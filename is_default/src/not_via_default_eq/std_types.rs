@@ -231,16 +231,3 @@ impl<T> IsDefault for Cursor<T> {
 
 ref_impl!(Ref<'_, T>);
 ref_impl!(RefMut<'_, T>);
-
-#[cfg(feature = "ascii_char")]
-mod ascii_char {
-    use std::ascii::Char;
-
-    impl crate::IsDefault for Char {
-        /// Returns `true` if self is `Char::Null`.
-        #[inline]
-        fn is_default(&self) -> bool {
-            matches!(self, Char::Null)
-        }
-    }
-}

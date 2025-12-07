@@ -62,6 +62,12 @@ test_borrowed!(str, ""; "x");
 test!(slice, &[u8], &[0u8]; &[1u8]);
 test!(array, [u8; 0], [0u8]; [1u8]);
 
+#[cfg(feature = "ascii_char")]
+mod ascii_char {
+    use core::ascii::Char;
+    test!(ascii_char, Char, Char::Null; Char::StartOfHeading, Char::MAX);
+}
+
 #[cfg(feature = "std")]
 mod std_types {
     use is_default::IsDefault;
@@ -190,11 +196,5 @@ mod std_types {
 
         test_weak!(rc_weak, Rc, std::rc, {Rc, Weak});
         test_weak!(arc_weak, Arc, std::sync, {Arc, Weak});
-    }
-
-    #[cfg(feature = "ascii_char")]
-    mod ascii_char {
-        use std::ascii::Char;
-        test!(ascii_char, Char, Char::Null; Char::StartOfHeading, Char::MAX);
     }
 }
