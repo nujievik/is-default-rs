@@ -70,7 +70,7 @@ assert!(!Point{ x: 0, y: 1.1 }.is_default());
 
 When deriving `IsDefault` for an enum, you must specify which unit
 variant should be considered the default. This is done by applying
-the #[is_default] or #[default] attribute to the variant:
+the `#[is_default]` or `#[default]` attribute to the variant:
 
 ```rust
 # #[cfg(feature = "derive")] {
@@ -87,7 +87,8 @@ assert!(!A::Y.is_default());
 # }
 ```
 
-#[default] attribute possible to derive both `Default` and `IsDefault`:
+`#[default]` attribute possible to derive both `Default` and
+`IsDefault`:
 
 ```rust
 # #[cfg(feature = "derive")] {

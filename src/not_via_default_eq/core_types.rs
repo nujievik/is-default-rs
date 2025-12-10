@@ -1,7 +1,5 @@
 use crate::IsDefault;
 
-unit_impl!(());
-
 matches_impl!(bool, false);
 matches_impl!(char, '\x00');
 
@@ -62,6 +60,45 @@ where
         self.as_slice().is_default()
     }
 }
+
+macro_rules! tuple_impls {
+    () => {
+        unit_impl!(());
+    };
+
+    ($T:ident $( $Ts:ident)*) => {
+        maybe_tuple_doc! {
+            $T $($Ts)* @
+            #[allow(non_snake_case)]
+            impl<$T: IsDefault, $($Ts: IsDefault),*> IsDefault for ($T, $($Ts,)*) {
+                /// Returns `true` if all tuple fields is default.
+                fn is_default(&self) -> bool {
+                    let ($T, $($Ts,)*) = self;
+                    $T.is_default() $( && $Ts.is_default() )*
+                }
+            }
+        }
+
+        tuple_impls!($($Ts)*);
+    };
+}
+
+// If this is a unary tuple, it adds a doc comment.
+// Otherwise, it hides the docs entirely.
+macro_rules! maybe_tuple_doc {
+    ($a:ident @ #[$meta:meta] $item:item) => {
+        #[doc = "This trait is implemented for tuples up to twelve items long."]
+        #[$meta]
+        $item
+    };
+    ($a:ident $($rest_a:ident)+ @ #[$meta:meta] $item:item) => {
+        #[doc(hidden)]
+        #[$meta]
+        $item
+    };
+}
+
+tuple_impls!(K J I H G F E D C B A T);
 
 #[cfg(feature = "ascii_char")]
 mod ascii_char {

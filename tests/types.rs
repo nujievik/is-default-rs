@@ -2,6 +2,8 @@
 #![cfg_attr(feature = "f16", feature(f16))]
 #![cfg_attr(feature = "f128", feature(f128))]
 
+use is_default::IsDefault;
+
 macro_rules! test {
     ($ty:ident, $true:expr; $( $false:expr ),* ) => {
         test!($ty, $ty, $true; $( $false ),* );
@@ -10,15 +12,12 @@ macro_rules! test {
     ($fn:ident, $ty:ty, $true:expr; $( $false:expr ),* ) => {
         #[test]
         fn $fn() {
-            use is_default::IsDefault;
             assert!(<$ty>::default().is_default());
             assert!($true.is_default());
             $( assert!(!$false.is_default()) );*
         }
     };
 }
-
-test!(unit, (), (););
 
 test!(bool, false; true);
 test!(char, '\x00'; 'a', char::MAX);
@@ -50,7 +49,6 @@ macro_rules! test_borrowed {
     ($fn:ident, $true:expr; $( $false:expr ),* ) => {
         #[test]
         fn $fn() {
-            use is_default::IsDefault;
             assert!($true.is_default());
             $( assert!(!$false.is_default()) );*
         }
@@ -61,6 +59,40 @@ test_borrowed!(str, ""; "x");
 
 test!(slice, &[u8], &[0u8]; &[1u8]);
 test!(array, [u8; 0], [0u8]; [1u8]);
+
+macro_rules! test_tuple {
+    ($fn:ident, $( $Ts:tt)* ) => {
+        #[test]
+        fn $fn() {
+            let mut tuple = ( $($Ts,)* );
+            assert!(tuple.is_default());
+            test_tuple!(@assert_false, tuple, $($Ts)*);
+        }
+    };
+    (@assert_false, $tuple:expr, $T:tt) => {{
+        $tuple.$T = 1;
+        assert!(!$tuple.is_default());
+        $tuple.$T = 0;
+    }};
+    (@assert_false, $tuple:expr, $T:tt $($Ts:tt)*) => {
+        test_tuple!(@assert_false, $tuple, $T);
+        test_tuple!(@assert_false, $tuple, $($Ts)*);
+    };
+}
+
+test!(unit, (), (););
+
+test_tuple!(tuple_t, 0);
+test_tuple!(tuple_t_a, 0 0);
+test_tuple!(tuple_t_a_b, 0 0 0);
+test_tuple!(tuple_t_a_b_c_d, 0 0 0 0 0);
+test_tuple!(tuple_t_a_b_c_d_e, 0 0 0 0 0 0);
+test_tuple!(tuple_t_a_b_c_d_e_f, 0 0 0 0 0 0 0);
+test_tuple!(tuple_t_a_b_c_d_e_f_g, 0 0 0 0 0 0 0 0);
+test_tuple!(tuple_t_a_b_c_d_e_f_g_h, 0 0 0 0 0 0 0 0 0);
+test_tuple!(tuple_t_a_b_c_d_e_f_g_h_i, 0 0 0 0 0 0 0 0 0 0);
+test_tuple!(tuple_t_a_b_c_d_e_f_g_h_i_j, 0 0 0 0 0 0 0 0 0 0 0);
+test_tuple!(tuple_t_a_b_c_d_e_f_g_h_i_j_k, 0 0 0 0 0 0 0 0 0 0 0 0);
 
 #[cfg(feature = "ascii_char")]
 mod ascii_char {
