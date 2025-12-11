@@ -96,6 +96,7 @@ test_tuple!(tuple_t_a_b_c_d_e_f_g_h_i_j_k, 0 0 0 0 0 0 0 0 0 0 0 0);
 
 #[cfg(feature = "ascii_char")]
 mod ascii_char {
+    use is_default::IsDefault;
     use core::ascii::Char;
     test!(ascii_char, Char, Char::Null; Char::StartOfHeading, Char::MAX);
 }
