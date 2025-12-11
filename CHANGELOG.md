@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Exclude `Cargo.lock` and `tests` for crates.io publication.
+- Exclude `tests` for crates.io publication.
 
 ## [0.1.2] - 2025-12-07
 

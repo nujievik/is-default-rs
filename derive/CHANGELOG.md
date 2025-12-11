@@ -9,7 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Exclude `Cargo.lock` for crates.io publication.
 - Remove unused dependency.
 
 ## [0.1.0] - 2025-09-23
