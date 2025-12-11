@@ -133,7 +133,7 @@ macro_rules! deref_impl_t {
     ($t:ident) => {
         impl<T> IsDefault for $t<T>
         where
-            T: IsDefault,
+            T: IsDefault + ?Sized,
         {
             /// Returns `true` if the inner value is default.
             #[inline]
@@ -163,7 +163,7 @@ macro_rules! lock_impl {
     ($t:ident, $lock:ident) => {
         impl<T> IsDefault for $t<T>
         where
-            T: IsDefault,
+            T: IsDefault + ?Sized,
         {
             /// Returns `true` if the inner value is default.
             #[doc = concat!("Always return false if `self.", stringify!($lock), "()` returns an error.")]
@@ -205,7 +205,7 @@ macro_rules! once_impl {
 once_impl!(OnceCell);
 once_impl!(OnceLock);
 
-impl<T> IsDefault for rc::Weak<T> {
+impl<T: ?Sized> IsDefault for rc::Weak<T> {
     /// Returns true if the [Weak::upgrade](rc::Weak::upgrade) returns `None`.
     #[inline]
     fn is_default(&self) -> bool {
@@ -213,7 +213,7 @@ impl<T> IsDefault for rc::Weak<T> {
     }
 }
 
-impl<T> IsDefault for sync::Weak<T> {
+impl<T: ?Sized> IsDefault for sync::Weak<T> {
     /// Returns true if the [Weak::upgrade](sync::Weak::upgrade) returns `None`.
     #[inline]
     fn is_default(&self) -> bool {
