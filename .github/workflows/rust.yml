@@ -1,4 +1,4 @@
-name: Cargo Build & Test
+name: Tests
 
 on:
   push:
@@ -10,8 +10,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build_and_test:
-    name: Rust project - latest
+  run:
     runs-on: ubuntu-latest
 
     strategy:
