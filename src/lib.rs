@@ -1,6 +1,7 @@
 #![doc = include_str!("../README.md")]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(feature = "ascii_char", feature(ascii_char, ascii_char_variants))]
+#![cfg_attr(feature = "bstr", feature(bstr))]
 #![cfg_attr(feature = "f16", feature(f16))]
 #![cfg_attr(feature = "f128", feature(f128))]
 

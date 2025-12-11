@@ -1,4 +1,5 @@
 #![cfg_attr(feature = "ascii_char", feature(ascii_char, ascii_char_variants))]
+#![cfg_attr(feature = "bstr", feature(bstr))]
 #![cfg_attr(feature = "f16", feature(f16))]
 #![cfg_attr(feature = "f128", feature(f128))]
 
@@ -231,5 +232,14 @@ mod std_types {
 
         test_weak!(rc_weak, Rc, std::rc, {Rc, Weak});
         test_weak!(arc_weak, Arc, std::sync, {Arc, Weak});
+    }
+
+    #[cfg(feature = "bstr")]
+    mod feature_bstr {
+        use is_default::IsDefault;
+        use std::bstr::{ByteStr, ByteString};
+
+        test_borrowed!(byte_str, ByteStr::new::<[u8]>(&[]); ByteStr::new(&[b'x']));
+        test!(byte_string, ByteString, ByteString::from_iter::<[u8; 0]>([]); ByteString::from_iter([b'x']));
     }
 }

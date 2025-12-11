@@ -23,6 +23,7 @@ Nightly-only:
 |---------------------|---------|-------------------------------|
 | `nightly`           | no      | Enable all below nightly features |
 | `ascii_char`        | no      | Core `ascii_char`             |
+| `bstr`              | no      | Std `bstr`                    |
 | `f16`               | no      | Core `f16`                    |
 | `f128`              | no      | Core `f128`                   |
 
