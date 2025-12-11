@@ -1,18 +1,18 @@
 [package]
 name = "is_default_derive"
-version = "0.1.1"
+version = "0.1.0"
 authors = ["Ivan Reutov <nujievik@gmail.com>"]
 edition = "2024"
 rust-version = "1.85"
 description = "A derive macro for the `IsDefault` trait from `is_default` crate."
 repository = "https://github.com/nujievik/is-default-rs"
 license = "MIT OR Apache-2.0"
-include = ["src/**"]
 
 [lib]
 proc-macro = true
 
 [dependencies]
 proc-macro-crate = "3"
+proc-macro2 = "1"
 quote = "1"
 syn = "2"
