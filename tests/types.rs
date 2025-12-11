@@ -110,7 +110,7 @@ mod std_types {
         cell::{Cell, OnceCell, RefCell},
         collections::{BTreeMap, BTreeSet, HashMap, HashSet, LinkedList, VecDeque},
         ffi::{CString, OsStr, OsString},
-        io::{self, Cursor, Empty, Sink},
+        io::Cursor,
         marker::PhantomPinned,
         num::Wrapping,
         path::PathBuf,
@@ -119,9 +119,7 @@ mod std_types {
         time::Duration,
     };
 
-    test!(empty, Empty, io::empty(););
     test!(phantom_pinned, PhantomPinned, PhantomPinned;);
-    test!(sink, Sink, io::sink(););
     test!(wrapping, Wrapping::<u8>, Wrapping(0u8); Wrapping(1u8));
 
     test!(string, String, String::from(""); String::from("x"));
@@ -183,6 +181,7 @@ mod std_types {
         use is_default::IsDefault;
         use std::{
             collections::BinaryHeap,
+            io::{self, Empty, Sink},
             path::Path,
             sync::{
                 Mutex, RwLock,
@@ -193,6 +192,8 @@ mod std_types {
             },
         };
 
+        test!(empty, Empty, io::empty(););
+        test!(sink, Sink, io::sink(););
         test!(atomic_bool, AtomicBool, AtomicBool::new(false); AtomicBool::new(true));
 
         test!(atomic_i8, AtomicI8, AtomicI8::new(0); AtomicI8::new(i8::MAX), AtomicI8::new(1));
