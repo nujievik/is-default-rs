@@ -4,7 +4,7 @@ use std::{
     cell::{Cell, OnceCell, Ref, RefCell, RefMut},
     collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedList, VecDeque},
     ffi::{CStr, CString, OsStr, OsString},
-    io::Cursor,
+    io::{Cursor, Empty, Sink},
     marker::PhantomPinned,
     num::Wrapping,
     path::{Path, PathBuf},
@@ -30,7 +30,9 @@ where
     }
 }
 
+unit_impl!(Empty);
 unit_impl!(PhantomPinned);
+unit_impl!(Sink);
 
 macro_rules! atomic_impl {
     ($t:ty, $v:expr) => {

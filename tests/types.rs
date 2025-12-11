@@ -109,7 +109,7 @@ mod std_types {
         cell::{Cell, OnceCell, RefCell},
         collections::{BTreeMap, BTreeSet, HashMap, HashSet, LinkedList, VecDeque},
         ffi::{CString, OsStr, OsString},
-        io::Cursor,
+        io::{self, Cursor, Empty, Sink},
         marker::PhantomPinned,
         num::Wrapping,
         path::PathBuf,
@@ -118,8 +118,10 @@ mod std_types {
         time::Duration,
     };
 
-    test!(wrapping, Wrapping::<u8>, Wrapping(0u8); Wrapping(1u8));
+    test!(empty, Empty, io::empty(););
     test!(phantom_pinned, PhantomPinned, PhantomPinned;);
+    test!(sink, Sink, io::sink(););
+    test!(wrapping, Wrapping::<u8>, Wrapping(0u8); Wrapping(1u8));
 
     test!(string, String, String::from(""); String::from("x"));
     test!(c_string, CString, CString::new("").unwrap(); CString::new("x").unwrap());
