@@ -1,5 +1,5 @@
-[![Tests](https://github.com/nujievik/is-default-rs/actions/workflows/rust.yml/badge.svg)](
-https://github.com/nujievik/is-default-rs/actions/workflows/rust.yml)
+[![Tests](https://github.com/nujievik/is-default-rs/actions/workflows/tests.yml/badge.svg)](
+https://github.com/nujievik/is-default-rs/actions/workflows/tests.yml)
 
 A trait for checking whether a value is the default, with convenient
 derive support for custom types.
