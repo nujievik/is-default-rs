@@ -6,7 +6,7 @@ derive support for custom types.
 
 The default value is defined as the value returned by the `Default`
 trait. Therefore, any implementation of `IsDefault` must ensure that
-`self == &Self::default()` holds true.
+`&self == &Self::default()` holds true.
 
 
 ## Features
@@ -15,7 +15,6 @@ trait. Therefore, any implementation of `IsDefault` must ensure that
 |---------------------|---------|-------------------------------|
 | `derive`            | yes     | Derive trait for a type       |
 | `std`               | yes     | Implements for std-types      |
-| `via_default_eq`    | no      | Generic implementation via `Default` & `PartialEq` |
 
 Nightly-only:
 
@@ -38,7 +37,7 @@ types that implement `Default`. For custom types, you can derive
 # Cargo.toml
 
 [dependencies]
-is_default = { version = "0.1", features = ["derive"] }
+is_default = { version = "1", features = ["derive"] }
 ```
 
 #### Structs
@@ -131,24 +130,6 @@ assert!(!C::X(1).is_default());
 # }
 ```
 
-### via_default_eq
-
-By default, `IsDefault` is manually implemented for core and std types.
-This approach is fast and has no trait dependencies but requires manual
-implementation for custom types.
-
-Alternatively, you can enable a generic implementation of `IsDefault`
-for all types that implement both `Default` and `PartialEq`. This is
-the simplest option, but it may be less efficient, as it allocates a
-new value for comparison:
-
-```toml
-# Cargo.toml
-
-[dependencies]
-is_default = { version = "0.1.1", features = ["via_default_eq"] }
-```
-
 
 ## no_std
 
@@ -159,5 +140,5 @@ features disabled:
 # Cargo.toml
 
 [dependencies]
-is_default = { version = "0.1.1", default-features = false, features = ["derive"] }
+is_default = { version = "1", default-features = false, features = ["derive"] }
 ```

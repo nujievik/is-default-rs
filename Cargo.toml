@@ -4,7 +4,7 @@ resolver = "1"
 
 [package]
 name = "is_default"
-version = "0.1.4"
+version = "1.0.1"
 authors = ["Ivan Reutov <nujievik@gmail.com>"]
 edition = "2024"
 rust-version = "1.85.0"
@@ -19,7 +19,6 @@ include = ["README.md", "src/**"]
 default = ["derive", "std"]
 derive = ["is_default_derive"]
 std = []
-via_default_eq = []
 nightly = ["ascii_char", "bstr", "f16", "f128"]
 ascii_char = []
 bstr = ["std"]

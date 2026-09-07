@@ -18,19 +18,4 @@ pub trait IsDefault {
     fn is_default(&self) -> bool;
 }
 
-#[cfg(not(feature = "via_default_eq"))]
-mod not_via_default_eq;
-
-#[cfg(feature = "via_default_eq")]
-mod via_default_eq {
-    use crate::IsDefault;
-
-    impl<T> IsDefault for T
-    where
-        T: Default + PartialEq,
-    {
-        fn is_default(&self) -> bool {
-            self == &Self::default()
-        }
-    }
-}
+mod impls;

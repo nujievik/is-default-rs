@@ -1,4 +1,4 @@
-#[cfg(all(feature = "derive", not(feature = "via_default_eq")))]
+#[cfg(feature = "derive")]
 mod derive {
     use is_default::IsDefault;
 

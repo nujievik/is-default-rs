@@ -73,7 +73,10 @@ macro_rules! test_tuple {
     (@assert_false, $tuple:expr, $T:tt) => {{
         $tuple.$T = 1;
         assert!(!$tuple.is_default());
-        $tuple.$T = 0;
+        #[allow(unused_assignments)]
+        {
+            $tuple.$T = 0;
+        }
     }};
     (@assert_false, $tuple:expr, $T:tt $($Ts:tt)*) => {
         test_tuple!(@assert_false, $tuple, $T);
@@ -108,34 +111,58 @@ mod std_types {
     use std::{
         borrow::Cow,
         cell::{Cell, OnceCell, RefCell},
-        collections::{BTreeMap, BTreeSet, HashMap, HashSet, LinkedList, VecDeque},
+        collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedList, VecDeque},
         ffi::{CString, OsStr, OsString},
-        io::Cursor,
+        io::{self, Cursor, Empty, Sink},
         marker::PhantomPinned,
         num::Wrapping,
-        path::PathBuf,
+        path::{Path, PathBuf},
         rc::Rc,
-        sync::{Arc, OnceLock},
+        sync::atomic::{
+            AtomicBool, AtomicI8, AtomicI16, AtomicI32, AtomicI64, AtomicIsize, AtomicU8,
+            AtomicU16, AtomicU32, AtomicU64, AtomicUsize,
+        },
+        sync::{Arc, Mutex, OnceLock, RwLock},
         time::Duration,
     };
 
-    test!(phantom_pinned, PhantomPinned, PhantomPinned;);
     test!(wrapping, Wrapping::<u8>, Wrapping(0u8); Wrapping(1u8));
+
+    test!(empty, Empty, io::empty(););
+    test!(phantom_pinned, PhantomPinned, PhantomPinned;);
+    test!(sink, Sink, io::sink(););
+
+    test!(atomic_bool, AtomicBool, AtomicBool::new(false); AtomicBool::new(true));
+
+    test!(atomic_i8, AtomicI8, AtomicI8::new(0); AtomicI8::new(i8::MAX), AtomicI8::new(1));
+    test!(atomic_i16, AtomicI16, AtomicI16::new(0); AtomicI16::new(i16::MAX), AtomicI16::new(1));
+    test!(atomic_i32, AtomicI32, AtomicI32::new(0); AtomicI32::new(i32::MAX), AtomicI32::new(1));
+    test!(atomic_i64, AtomicI64, AtomicI64::new(0); AtomicI64::new(i64::MAX), AtomicI64::new(1));
+    test!(atomic_isize, AtomicIsize, AtomicIsize::new(0); AtomicIsize::new(isize::MAX), AtomicIsize::new(1));
+
+    test!(atomic_u8, AtomicU8, AtomicU8::new(0); AtomicU8::new(u8::MAX), AtomicU8::new(1));
+    test!(atomic_u16, AtomicU16, AtomicU16::new(0); AtomicU16::new(u16::MAX), AtomicU16::new(1));
+    test!(atomic_u32, AtomicU32, AtomicU32::new(0); AtomicU32::new(u32::MAX), AtomicU32::new(1));
+    test!(atomic_u64, AtomicU64, AtomicU64::new(0); AtomicU64::new(u64::MAX), AtomicU64::new(1));
+    test!(atomic_usize, AtomicUsize, AtomicUsize::new(0); AtomicUsize::new(usize::MAX), AtomicUsize::new(1));
 
     test!(string, String, String::from(""); String::from("x"));
     test!(c_string, CString, CString::new("").unwrap(); CString::new("x").unwrap());
-
     test!(os_string, OsString, OsString::from(""); OsString::from("x"));
-    test!(path_buf, PathBuf, PathBuf::from(""); PathBuf::from("x"));
 
     test_borrowed!(c_str, c""; c"x");
     test_borrowed!(os_str, OsStr::new(""); OsStr::new("x"));
+
+    test_borrowed!(path, Path::new(""); Path::new("x"));
+    test!(path_buf, PathBuf, PathBuf::from(""); PathBuf::from("x"));
 
     test!(duration, Duration, Duration::ZERO; Duration::new(1, 0));
 
     test!(option, Option::<u8>, None::<u8>; Some(0u8));
 
     test!(b_tree_set, BTreeSet::<u8>, BTreeSet::<u8>::new(); BTreeSet::from([0u8]));
+    test!(binary_heap, BinaryHeap::<u8>, BinaryHeap::<u8>::new(); BinaryHeap::from([0u8]));
+
     test!(hash_set, HashSet::<u8>, HashSet::<u8>::new(); HashSet::from([0u8]));
     test!(linked_list, LinkedList::<u8>, LinkedList::<u8>::new(); LinkedList::from([0u8]));
 
@@ -151,7 +178,10 @@ mod std_types {
 
     test!(cow, Cow::<str>, Cow::from(""); Cow::from("x"));
     test!(cell, Cell::<u8>, Cell::new(0u8); Cell::new(1u8));
+
     test!(ref_cell, RefCell::<u8>, RefCell::new(0u8); RefCell::new(1u8));
+    test!(rw_lock, RwLock::<u8>, RwLock::new(0u8); RwLock::new(1u8));
+    test!(mutex, Mutex::<u8>, Mutex::new(0u8); Mutex::new(1u8));
 
     macro_rules! test_once {
         ($fn:ident, $ty:ty) => {
@@ -176,64 +206,24 @@ mod std_types {
         assert!(!c.is_default());
     }
 
-    #[cfg(not(feature = "via_default_eq"))]
-    mod no_via_default_eq {
-        use is_default::IsDefault;
-        use std::{
-            collections::BinaryHeap,
-            io::{self, Empty, Sink},
-            path::Path,
-            sync::{
-                Mutex, RwLock,
-                atomic::{
-                    AtomicBool, AtomicI8, AtomicI16, AtomicI32, AtomicI64, AtomicIsize, AtomicU8,
-                    AtomicU16, AtomicU32, AtomicU64, AtomicUsize,
-                },
-            },
+    macro_rules! test_weak {
+        ($fn:ident, $up:ident, $mod:path, { $($imports:ident),+ }) => {
+            #[test]
+            fn $fn() {
+                use $mod::{ $($imports),+ };
+
+                assert!(Weak::<u8>::new().is_default());
+                let x = $up::new(0u8);
+                let xw = $up::downgrade(&x);
+                assert!(!xw.is_default());
+                drop(x);
+                assert!(xw.is_default());
+            }
         };
-
-        test!(empty, Empty, io::empty(););
-        test!(sink, Sink, io::sink(););
-        test!(atomic_bool, AtomicBool, AtomicBool::new(false); AtomicBool::new(true));
-
-        test!(atomic_i8, AtomicI8, AtomicI8::new(0); AtomicI8::new(i8::MAX), AtomicI8::new(1));
-        test!(atomic_i16, AtomicI16, AtomicI16::new(0); AtomicI16::new(i16::MAX), AtomicI16::new(1));
-        test!(atomic_i32, AtomicI32, AtomicI32::new(0); AtomicI32::new(i32::MAX), AtomicI32::new(1));
-        test!(atomic_i64, AtomicI64, AtomicI64::new(0); AtomicI64::new(i64::MAX), AtomicI64::new(1));
-        test!(atomic_isize, AtomicIsize, AtomicIsize::new(0); AtomicIsize::new(isize::MAX), AtomicIsize::new(1));
-
-        test!(atomic_u8, AtomicU8, AtomicU8::new(0); AtomicU8::new(u8::MAX), AtomicU8::new(1));
-        test!(atomic_u16, AtomicU16, AtomicU16::new(0); AtomicU16::new(u16::MAX), AtomicU16::new(1));
-        test!(atomic_u32, AtomicU32, AtomicU32::new(0); AtomicU32::new(u32::MAX), AtomicU32::new(1));
-        test!(atomic_u64, AtomicU64, AtomicU64::new(0); AtomicU64::new(u64::MAX), AtomicU64::new(1));
-        test!(atomic_usize, AtomicUsize, AtomicUsize::new(0); AtomicUsize::new(usize::MAX), AtomicUsize::new(1));
-
-        test_borrowed!(path, Path::new(""); Path::new("x"));
-
-        test!(binary_heap, BinaryHeap::<u8>, BinaryHeap::<u8>::new(); BinaryHeap::from([0u8]));
-
-        test!(rw_lock, RwLock::<u8>, RwLock::new(0u8); RwLock::new(1u8));
-        test!(mutex, Mutex::<u8>, Mutex::new(0u8); Mutex::new(1u8));
-
-        macro_rules! test_weak {
-            ($fn:ident, $up:ident, $mod:path, { $($imports:ident),+ }) => {
-                #[test]
-                fn $fn() {
-                    use $mod::{ $($imports),+ };
-
-                    assert!(Weak::<u8>::new().is_default());
-                    let x = $up::new(0u8);
-                    let xw = $up::downgrade(&x);
-                    assert!(!xw.is_default());
-                    drop(x);
-                    assert!(xw.is_default());
-                }
-            };
-        }
-
-        test_weak!(rc_weak, Rc, std::rc, {Rc, Weak});
-        test_weak!(arc_weak, Arc, std::sync, {Arc, Weak});
     }
+
+    test_weak!(rc_weak, Rc, std::rc, {Rc, Weak});
+    test_weak!(arc_weak, Arc, std::sync, {Arc, Weak});
 
     #[cfg(feature = "bstr")]
     mod feature_bstr {
