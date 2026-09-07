@@ -4,7 +4,7 @@ resolver = "1"
 
 [package]
 name = "is_default"
-version = "1.0.1"
+version = "1.0.2"
 authors = ["Ivan Reutov <nujievik@gmail.com>"]
 edition = "2024"
 rust-version = "1.85.0"

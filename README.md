@@ -31,18 +31,11 @@ Nightly-only:
 
 The `IsDefault` trait is already implemented for most core and std
 types that implement `Default`. For custom types, you can derive
-`IsDefault` using derive:
-
-```toml
-# Cargo.toml
-
-[dependencies]
-is_default = { version = "1", features = ["derive"] }
-```
+`IsDefault` using derive.
 
 #### Structs
 
-A struct can derive` IsDefault` if all of its fields implement
+A struct can derive `IsDefault` if all of its fields implement
 `IsDefault`:
 
 ```rust
@@ -111,7 +104,7 @@ and `PartialEq`. This approach is more general but may be less
 efficient, since a new value must be allocated for comparison:
 
 ```rust
-# #[cfg(all(feature = "derive", not(feature = "via_default_eq")))] {
+# #[cfg(feature = "derive")] {
 # use is_default::IsDefault;
 #
 #[derive(PartialEq, IsDefault)]
