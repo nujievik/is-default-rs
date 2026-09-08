@@ -1,12 +1,16 @@
 [![Tests](https://github.com/nujievik/is-default-rs/actions/workflows/tests.yml/badge.svg)](
 https://github.com/nujievik/is-default-rs/actions/workflows/tests.yml)
 
-A trait for checking whether a value is the default, with convenient
-derive support for custom types.
+A fast trait for checking whether a value is the default, with 
+convenient derive support for custom types.
 
 The default value is defined as the value returned by the `Default`
 trait. Therefore, any implementation of `IsDefault` must ensure that
 `&self == &Self::default()` holds true.
+
+Unlike the naive comparison `&self == &Self::default()`, it directly
+evaluates the type's internal fields without the overhead of
+constructing a new instance.
 
 
 ## Features
