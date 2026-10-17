@@ -31,6 +31,14 @@ is_empty_impl!(str);
 ref_impl!(&T);
 ref_impl!(&mut T);
 
+impl<T> IsDefault for core::option::Option<T> {
+    /// Returns `true` if self is `None`.
+    #[inline]
+    fn is_default(&self) -> bool {
+        self.is_none()
+    }
+}
+
 impl<T> IsDefault for [T]
 where
     T: IsDefault,

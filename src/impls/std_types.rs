@@ -89,14 +89,6 @@ impl IsDefault for Duration {
     }
 }
 
-impl<T> IsDefault for Option<T> {
-    /// Returns `true` if self is `None`.
-    #[inline]
-    fn is_default(&self) -> bool {
-        self.is_none()
-    }
-}
-
 macro_rules! is_empty_impl_t {
     ($t:ident) => {
         impl<T> IsDefault for $t<T> {

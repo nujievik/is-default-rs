@@ -58,6 +58,8 @@ macro_rules! test_borrowed {
 
 test_borrowed!(str, ""; "x");
 
+test!(option, Option::<u8>, None::<u8>; Some(0u8));
+
 test!(slice, &[u8], &[0u8]; &[1u8]);
 test!(array, [u8; 0], [0u8]; [1u8]);
 
@@ -157,8 +159,6 @@ mod std_types {
     test!(path_buf, PathBuf, PathBuf::from(""); PathBuf::from("x"));
 
     test!(duration, Duration, Duration::ZERO; Duration::new(1, 0));
-
-    test!(option, Option::<u8>, None::<u8>; Some(0u8));
 
     test!(b_tree_set, BTreeSet::<u8>, BTreeSet::<u8>::new(); BTreeSet::from([0u8]));
     test!(binary_heap, BinaryHeap::<u8>, BinaryHeap::<u8>::new(); BinaryHeap::from([0u8]));
