@@ -5,6 +5,8 @@
 #![cfg_attr(feature = "f16", feature(f16))]
 #![cfg_attr(feature = "f128", feature(f128))]
 
+mod impls;
+
 #[cfg(feature = "derive")]
 extern crate is_default_derive;
 #[cfg(feature = "derive")]
@@ -18,4 +20,17 @@ pub trait IsDefault {
     fn is_default(&self) -> bool;
 }
 
-mod impls;
+/// Returns `true` if `self` is equal to the default value for its type.
+///
+/// # Examples
+/// ```
+/// use is_default::is_default;
+///
+/// assert!(is_default(&0));
+/// // non_default
+/// assert!(!is_default(&1));
+/// ```
+#[inline]
+pub fn is_default<T: IsDefault + ?Sized>(v: &T) -> bool {
+    v.is_default()
+}
