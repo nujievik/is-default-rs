@@ -1,8 +1,8 @@
 [![Tests](https://github.com/nujievik/is-default-rs/actions/workflows/tests.yml/badge.svg)](
 https://github.com/nujievik/is-default-rs/actions/workflows/tests.yml)
 
-A fast trait for checking whether a value is the default, with 
-convenient derive support for custom types.
+Fast default value checking trait, with convenient derive support for
+custom types.
 
 The default value is defined as the value returned by the `Default`
 trait. Therefore, any implementation of `IsDefault` must ensure that
