@@ -57,6 +57,7 @@ macro_rules! test_borrowed {
 }
 
 test_borrowed!(str, ""; "x");
+test_borrowed!(c_str, c""; c"x");
 
 test!(option, Option::<u8>, None::<u8>; Some(0u8));
 
@@ -152,7 +153,6 @@ mod std_types {
     test!(c_string, CString, CString::new("").unwrap(); CString::new("x").unwrap());
     test!(os_string, OsString, OsString::from(""); OsString::from("x"));
 
-    test_borrowed!(c_str, c""; c"x");
     test_borrowed!(os_str, OsStr::new(""); OsStr::new("x"));
 
     test_borrowed!(path, Path::new(""); Path::new("x"));

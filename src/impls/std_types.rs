@@ -3,7 +3,7 @@ use std::{
     borrow::Cow,
     cell::{Cell, OnceCell, Ref, RefCell, RefMut},
     collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedList, VecDeque},
-    ffi::{CStr, CString, OsStr, OsString},
+    ffi::{CString, OsStr, OsString},
     io::{Cursor, Empty, Sink},
     marker::PhantomPinned,
     num::Wrapping,
@@ -61,7 +61,6 @@ atomic_impl!(AtomicU64, 0u64);
 atomic_impl!(AtomicUsize, 0usize);
 
 is_empty_impl!(String);
-is_empty_impl!(CStr);
 is_empty_impl!(CString);
 is_empty_impl!(OsStr);
 is_empty_impl!(OsString);

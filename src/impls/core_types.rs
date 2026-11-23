@@ -1,4 +1,5 @@
 use crate::IsDefault;
+use core::ffi::CStr;
 
 matches_impl!(bool, false);
 matches_impl!(char, '\x00');
@@ -27,6 +28,7 @@ matches_impl!(u128, 0u128);
 matches_impl!(usize, 0usize);
 
 is_empty_impl!(str);
+is_empty_impl!(CStr);
 
 ref_impl!(&T);
 ref_impl!(&mut T);
