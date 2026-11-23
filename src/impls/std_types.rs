@@ -141,14 +141,27 @@ deref_impl_t!(Arc);
 deref_impl_t!(Box);
 deref_impl_t!(Rc);
 
-impl<T> IsDefault for Cow<'_, T>
+impl<B> IsDefault for Cow<'_, B>
 where
-    T: IsDefault + ToOwned + ?Sized,
+    B: ToOwned<Owned: IsDefault> + ?Sized,
 {
-    /// Returns `true` if the inner value is default.
+    /// Returns `true` if self is `Owned` with default value.
+    /// ```
+    /// # extern crate alloc;
+    /// #
+    /// use alloc::borrow::Cow;
+    /// use is_default::IsDefault;
+    ///
+    /// assert!(Cow::<str>::default().is_default());
+    /// assert!(Cow::<str>::Owned(String::new()).is_default());
+    ///
+    /// // not default
+    /// assert!(!Cow::<str>::Borrowed("").is_default());
+    /// assert!(!Cow::<str>::Owned(String::from("x")).is_default());
+    /// ```
     #[inline]
     fn is_default(&self) -> bool {
-        (**self).is_default()
+        matches!(self, Cow::Owned(v) if v.is_default())
     }
 }
 

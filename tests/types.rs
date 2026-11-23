@@ -176,7 +176,7 @@ mod std_types {
     test!(test_box, Box::<u8>, &Box::new(0u8); &Box::new(1u8));
     test!(rc, Rc::<u8>, Rc::new(0u8); Rc::new(1u8));
 
-    test!(cow, Cow::<str>, Cow::from(""); Cow::from("x"));
+    test!(cow, Cow::<str>, Cow::from(String::from("")); Cow::from(String::from("x")), Cow::from(""));
     test!(cell, Cell::<u8>, Cell::new(0u8); Cell::new(1u8));
 
     test!(ref_cell, RefCell::<u8>, RefCell::new(0u8); RefCell::new(1u8));
