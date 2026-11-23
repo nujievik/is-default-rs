@@ -28,3 +28,6 @@ f128 = []
 
 [dependencies]
 is_default_derive = { version = "1.0.1", path = "derive", optional = true }
+
+[dev-dependencies]
+rustc-hash = "2"

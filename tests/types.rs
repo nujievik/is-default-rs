@@ -230,6 +230,7 @@ mod alloc_types {
 #[cfg(feature = "std")]
 mod std_types {
     use is_default::IsDefault;
+    use rustc_hash::{FxHashMap, FxHashSet};
     use std::{
         collections::{HashMap, HashSet},
         ffi::{OsStr, OsString},
@@ -248,14 +249,16 @@ mod std_types {
     test_borrowed!(path, Path::new(""); Path::new("x"));
     test!(path_buf, PathBuf, PathBuf::from(""); PathBuf::from("x"));
 
-    test!(hash_set, HashSet::<u8>, HashSet::<u8>::new(); HashSet::from([0u8]));
-
-    test!(hash_map, HashMap::<u8, u8>, HashMap::<u8, u8>::new(); HashMap::<u8, u8>::from([(0u8, 0u8)]));
-
     test!(rw_lock, RwLock::<u8>, RwLock::new(0u8); RwLock::new(1u8));
     test!(mutex, Mutex::<u8>, Mutex::new(0u8); Mutex::new(1u8));
 
     test_once!(once_lock, OnceLock::<u8>);
+
+    test!(hash_set, HashSet::<u8>, HashSet::<u8>::new(); HashSet::from([0u8]));
+    test!(fx_hash_set, FxHashSet::<u8>, FxHashSet::<u8>::default(); FxHashSet::from_iter([0u8]));
+
+    test!(hash_map, HashMap::<u8, u8>, HashMap::<u8, u8>::new(); HashMap::<u8, u8>::from([(0u8, 0u8)]));
+    test!(fx_hash_map, FxHashMap::<u8, u8>, FxHashMap::<u8, u8>::default(); FxHashMap::<u8, u8>::from_iter([(0u8, 0u8)]));
 
     #[test]
     fn cursor() {
