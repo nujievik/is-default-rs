@@ -81,3 +81,9 @@ is_empty_impl_k_v!(BTreeMap);
 
 is_empty_impl!(CString);
 is_empty_impl!(String);
+
+#[cfg(feature = "bstr")]
+mod feature_bstr {
+    use super::*;
+    is_empty_impl!(alloc::bstr::ByteString);
+}

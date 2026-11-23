@@ -218,6 +218,13 @@ mod alloc_types {
 
     test!(c_string, CString, CString::new("").unwrap(); CString::new("x").unwrap());
     test!(string, String, String::from(""); String::from("x"));
+
+    #[cfg(feature = "bstr")]
+    mod bstr {
+        use super::*;
+        use alloc::bstr::ByteString;
+        test!(byte_string, ByteString, ByteString::from_iter::<[u8; 0]>([]); ByteString::from_iter([b'x']));
+    }
 }
 
 #[cfg(feature = "std")]
@@ -256,13 +263,5 @@ mod std_types {
         assert!(c.is_default());
         c.set_position(1);
         assert!(!c.is_default());
-    }
-
-    #[cfg(feature = "bstr")]
-    mod feature_bstr {
-        use is_default::IsDefault;
-        use std::bstr::{ByteStr, ByteString};
-
-        test!(byte_string, ByteString, ByteString::from_iter::<[u8; 0]>([]); ByteString::from_iter([b'x']));
     }
 }
