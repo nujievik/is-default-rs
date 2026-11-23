@@ -108,24 +108,79 @@ mod ascii_char {
     test!(ascii_char, Char, Char::Null; Char::StartOfHeading, Char::MAX);
 }
 
+#[cfg(feature = "alloc")]
+mod alloc_types {
+    extern crate alloc;
+
+    use alloc::{
+        borrow::Cow,
+        boxed::Box,
+        collections::{BTreeMap, BTreeSet, BinaryHeap, LinkedList, VecDeque},
+        ffi::CString,
+        rc::Rc,
+        string::String,
+        sync::Arc,
+        vec::Vec,
+    };
+    use is_default::IsDefault;
+
+    test!(cow, Cow::<str>, Cow::<str>::Owned(String::from("")); Cow::<str>::Owned(String::from("x")), Cow::<str>::Borrowed("x"));
+
+    test!(test_box, Box::<u8>, &Box::new(0u8); &Box::new(1u8));
+    test!(rc, Rc::<u8>, Rc::new(0u8); Rc::new(1u8));
+    test!(arc, Arc::<u8>, Arc::new(0u8); Arc::new(1u8));
+
+    macro_rules! test_weak {
+        ($fn:ident, $up:ident, $mod:path, { $($imports:ident),+ }) => {
+            #[test]
+            fn $fn() {
+                use $mod::{ $($imports),+ };
+
+                assert!(Weak::<u8>::new().is_default());
+
+                let x = $up::new(0u8);
+                let xw = $up::downgrade(&x);
+                assert!(!xw.is_default());
+
+                drop(x);
+                assert!(xw.is_default());
+            }
+        };
+    }
+
+    test_weak!(rc_weak, Rc, alloc::rc, {Rc, Weak});
+    test_weak!(arc_weak, Arc, alloc::sync, {Arc, Weak});
+
+    test!(b_tree_set, BTreeSet::<u8>, BTreeSet::<u8>::new(); BTreeSet::from([0u8]));
+    test!(binary_heap, BinaryHeap::<u8>, BinaryHeap::<u8>::new(); BinaryHeap::from([0u8]));
+
+    test!(linked_list, LinkedList::<u8>, LinkedList::<u8>::new(); LinkedList::from([0u8]));
+
+    test!(vec, Vec::<u8>, Vec::<u8>::new(); Vec::from([0u8]));
+    test!(vec_deque, VecDeque::<u8>, VecDeque::<u8>::new(); VecDeque::from([0u8]));
+
+    test!(b_tree_map, BTreeMap::<u8, u8>, BTreeMap::<u8, u8>::new(); BTreeMap::<u8, u8>::from([(0u8, 0u8)]));
+
+    test!(c_string, CString, CString::new("").unwrap(); CString::new("x").unwrap());
+    test!(string, String, String::from(""); String::from("x"));
+}
+
 #[cfg(feature = "std")]
 mod std_types {
     use is_default::IsDefault;
     use std::{
-        borrow::Cow,
         cell::{Cell, OnceCell, RefCell},
-        collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap, HashSet, LinkedList, VecDeque},
-        ffi::{CString, OsStr, OsString},
+        collections::{HashMap, HashSet},
+        ffi::{OsStr, OsString},
         io::{self, Cursor, Empty, Sink},
         marker::PhantomPinned,
         num::Wrapping,
         path::{Path, PathBuf},
-        rc::Rc,
         sync::atomic::{
             AtomicBool, AtomicI8, AtomicI16, AtomicI32, AtomicI64, AtomicIsize, AtomicU8,
             AtomicU16, AtomicU32, AtomicU64, AtomicUsize,
         },
-        sync::{Arc, Mutex, OnceLock, RwLock},
+        sync::{Mutex, OnceLock, RwLock},
         time::Duration,
     };
 
@@ -149,8 +204,6 @@ mod std_types {
     test!(atomic_u64, AtomicU64, AtomicU64::new(0); AtomicU64::new(u64::MAX), AtomicU64::new(1));
     test!(atomic_usize, AtomicUsize, AtomicUsize::new(0); AtomicUsize::new(usize::MAX), AtomicUsize::new(1));
 
-    test!(string, String, String::from(""); String::from("x"));
-    test!(c_string, CString, CString::new("").unwrap(); CString::new("x").unwrap());
     test!(os_string, OsString, OsString::from(""); OsString::from("x"));
 
     test_borrowed!(os_str, OsStr::new(""); OsStr::new("x"));
@@ -160,23 +213,10 @@ mod std_types {
 
     test!(duration, Duration, Duration::ZERO; Duration::new(1, 0));
 
-    test!(b_tree_set, BTreeSet::<u8>, BTreeSet::<u8>::new(); BTreeSet::from([0u8]));
-    test!(binary_heap, BinaryHeap::<u8>, BinaryHeap::<u8>::new(); BinaryHeap::from([0u8]));
-
     test!(hash_set, HashSet::<u8>, HashSet::<u8>::new(); HashSet::from([0u8]));
-    test!(linked_list, LinkedList::<u8>, LinkedList::<u8>::new(); LinkedList::from([0u8]));
 
-    test!(vec, Vec::<u8>, Vec::<u8>::new(); Vec::from([0u8]));
-    test!(vec_deque, VecDeque::<u8>, VecDeque::<u8>::new(); VecDeque::from([0u8]));
-
-    test!(b_tree_map, BTreeMap::<u8, u8>, BTreeMap::<u8, u8>::new(); BTreeMap::<u8, u8>::from([(0u8, 0u8)]));
     test!(hash_map, HashMap::<u8, u8>, HashMap::<u8, u8>::new(); HashMap::<u8, u8>::from([(0u8, 0u8)]));
 
-    test!(arc, Arc::<u8>, Arc::new(0u8); Arc::new(1u8));
-    test!(test_box, Box::<u8>, &Box::new(0u8); &Box::new(1u8));
-    test!(rc, Rc::<u8>, Rc::new(0u8); Rc::new(1u8));
-
-    test!(cow, Cow::<str>, Cow::from(String::from("")); Cow::from(String::from("x")), Cow::from(""));
     test!(cell, Cell::<u8>, Cell::new(0u8); Cell::new(1u8));
 
     test!(ref_cell, RefCell::<u8>, RefCell::new(0u8); RefCell::new(1u8));
@@ -205,25 +245,6 @@ mod std_types {
         c.set_position(1);
         assert!(!c.is_default());
     }
-
-    macro_rules! test_weak {
-        ($fn:ident, $up:ident, $mod:path, { $($imports:ident),+ }) => {
-            #[test]
-            fn $fn() {
-                use $mod::{ $($imports),+ };
-
-                assert!(Weak::<u8>::new().is_default());
-                let x = $up::new(0u8);
-                let xw = $up::downgrade(&x);
-                assert!(!xw.is_default());
-                drop(x);
-                assert!(xw.is_default());
-            }
-        };
-    }
-
-    test_weak!(rc_weak, Rc, std::rc, {Rc, Weak});
-    test_weak!(arc_weak, Arc, std::sync, {Arc, Weak});
 
     #[cfg(feature = "bstr")]
     mod feature_bstr {

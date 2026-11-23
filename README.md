@@ -18,6 +18,7 @@ constructing a new instance.
 | Feature             | Default | Description                   |
 |---------------------|---------|-------------------------------|
 | `derive`            | yes     | Derive trait for a type       |
+| `alloc` | yes | Implements for alloc types |
 | `std`               | yes     | Implements for std-types      |
 
 Nightly-only:

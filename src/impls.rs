@@ -49,6 +49,33 @@ macro_rules! ref_impl {
     };
 }
 
+macro_rules! is_empty_impl_t {
+    ($t:ident) => {
+        impl<T> IsDefault for $t<T> {
+            /// Returns `true` if self is empty.
+            #[inline]
+            fn is_default(&self) -> bool {
+                self.is_empty()
+            }
+        }
+    };
+}
+
+macro_rules! is_empty_impl_k_v {
+    ($t:ident) => {
+        impl<K, V> IsDefault for $t<K, V> {
+            /// Returns `true` if self is empty.
+            #[inline]
+            fn is_default(&self) -> bool {
+                self.is_empty()
+            }
+        }
+    };
+}
+
 mod core_types;
+
+#[cfg(feature = "alloc")]
+mod alloc_types;
 #[cfg(feature = "std")]
 mod std_types;
