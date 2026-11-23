@@ -56,12 +56,3 @@ impl<T> IsDefault for Cursor<T> {
         matches!(self.position(), 0u64)
     }
 }
-
-#[cfg(feature = "bstr")]
-mod feature_bstr {
-    use crate::IsDefault;
-    use std::bstr::{ByteStr, ByteString};
-
-    is_empty_impl!(ByteStr);
-    is_empty_impl!(ByteString);
-}

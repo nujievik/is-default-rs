@@ -1,5 +1,5 @@
 #![cfg_attr(feature = "ascii_char", feature(ascii_char, ascii_char_variants))]
-#![cfg_attr(feature = "bstr", feature(bstr))]
+#![cfg_attr(feature = "bstr", feature(byte_str))]
 #![cfg_attr(feature = "f16", feature(f16))]
 #![cfg_attr(feature = "f128", feature(f128))]
 
@@ -156,6 +156,13 @@ mod ascii_char {
     test!(ascii_char, Char, Char::Null; Char::StartOfHeading, Char::MAX);
 }
 
+#[cfg(feature = "bstr")]
+mod bstr {
+    use super::*;
+    use core::byte_str::ByteStr;
+    test_borrowed!(byte_str, ByteStr::new::<[u8]>(&[]); ByteStr::new(&[b'x']));
+}
+
 #[cfg(feature = "alloc")]
 mod alloc_types {
     extern crate alloc;
@@ -211,6 +218,13 @@ mod alloc_types {
 
     test!(c_string, CString, CString::new("").unwrap(); CString::new("x").unwrap());
     test!(string, String, String::from(""); String::from("x"));
+
+    #[cfg(feature = "bstr")]
+    mod bstr {
+        use super::*;
+        use alloc::byte_str::ByteString;
+        test!(byte_string, ByteString, ByteString::from_iter::<[u8; 0]>([]); ByteString::from_iter([b'x']));
+    }
 }
 
 #[cfg(feature = "std")]
@@ -252,14 +266,5 @@ mod std_types {
         assert!(c.is_default());
         c.set_position(1);
         assert!(!c.is_default());
-    }
-
-    #[cfg(feature = "bstr")]
-    mod feature_bstr {
-        use is_default::IsDefault;
-        use std::bstr::{ByteStr, ByteString};
-
-        test_borrowed!(byte_str, ByteStr::new::<[u8]>(&[]); ByteStr::new(&[b'x']));
-        test!(byte_string, ByteString, ByteString::from_iter::<[u8; 0]>([]); ByteString::from_iter([b'x']));
     }
 }

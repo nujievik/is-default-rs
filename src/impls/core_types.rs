@@ -211,3 +211,9 @@ mod ascii_char {
         }
     }
 }
+
+#[cfg(feature = "bstr")]
+mod bstr {
+    use super::*;
+    is_empty_impl!(core::byte_str::ByteStr);
+}

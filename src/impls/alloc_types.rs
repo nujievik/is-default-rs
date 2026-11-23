@@ -99,3 +99,9 @@ impl<K, V> IsDefault for BTreeMap<K, V> {
         self.is_empty()
     }
 }
+
+#[cfg(feature = "bstr")]
+mod bstr {
+    use super::*;
+    is_empty_impl!(alloc::byte_str::ByteString);
+}
