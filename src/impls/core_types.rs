@@ -1,5 +1,17 @@
 use crate::IsDefault;
-use core::ffi::CStr;
+use core::{
+    cell::{Cell, OnceCell, Ref, RefCell, RefMut},
+    ffi::CStr,
+    marker::PhantomPinned,
+    num::Wrapping,
+    sync::atomic::{
+        AtomicBool, AtomicI8, AtomicI16, AtomicI32, AtomicI64, AtomicIsize, AtomicU8, AtomicU16,
+        AtomicU32, AtomicU64, AtomicUsize, Ordering,
+    },
+    time::Duration,
+};
+
+unit_impl!(PhantomPinned);
 
 matches_impl!(bool, false);
 matches_impl!(char, '\x00');
@@ -27,17 +39,94 @@ matches_impl!(u64, 0u64);
 matches_impl!(u128, 0u128);
 matches_impl!(usize, 0usize);
 
+impl<T> IsDefault for Wrapping<T>
+where
+    T: IsDefault,
+{
+    /// Returns `true` if the inner value is default.
+    #[inline]
+    fn is_default(&self) -> bool {
+        self.0.is_default()
+    }
+}
+
+macro_rules! atomic_impl {
+    ($t:ty, $v:expr) => {
+        impl IsDefault for $t {
+            #[doc = concat!("Returns `true` if self is `", stringify!($v), "`.")]
+            #[inline]
+            fn is_default(&self) -> bool {
+                matches!(self.load(Ordering::Relaxed), $v)
+            }
+        }
+    };
+}
+
+atomic_impl!(AtomicBool, false);
+
+atomic_impl!(AtomicI8, 0i8);
+atomic_impl!(AtomicI16, 0i16);
+atomic_impl!(AtomicI32, 0i32);
+atomic_impl!(AtomicI64, 0i64);
+atomic_impl!(AtomicIsize, 0isize);
+
+atomic_impl!(AtomicU8, 0u8);
+atomic_impl!(AtomicU16, 0u16);
+atomic_impl!(AtomicU32, 0u32);
+atomic_impl!(AtomicU64, 0u64);
+atomic_impl!(AtomicUsize, 0usize);
+
 is_empty_impl!(str);
 is_empty_impl!(CStr);
 
+macro_rules! ref_impl {
+    ($t:ty) => {
+        impl<T> IsDefault for $t
+        where
+            T: IsDefault + ?Sized,
+        {
+            /// Returns `true` if `T` is default.
+            #[inline]
+            fn is_default(&self) -> bool {
+                (**self).is_default()
+            }
+        }
+    };
+}
+
 ref_impl!(&T);
 ref_impl!(&mut T);
+ref_impl!(Ref<'_, T>);
+ref_impl!(RefMut<'_, T>);
+
+lock_impl!(RefCell, try_borrow);
+
+once_impl!(OnceCell);
+
+impl<T> IsDefault for Cell<T>
+where
+    T: Copy + IsDefault,
+{
+    /// Returns `true` if the inner value is default.
+    #[inline]
+    fn is_default(&self) -> bool {
+        self.get().is_default()
+    }
+}
 
 impl<T> IsDefault for core::option::Option<T> {
     /// Returns `true` if self is `None`.
     #[inline]
     fn is_default(&self) -> bool {
         self.is_none()
+    }
+}
+
+impl IsDefault for Duration {
+    /// Returns `true` if self is zero.
+    #[inline]
+    fn is_default(&self) -> bool {
+        self.is_zero()
     }
 }
 

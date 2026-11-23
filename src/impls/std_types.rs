@@ -1,60 +1,14 @@
 use crate::IsDefault;
 use std::{
-    cell::{Cell, OnceCell, Ref, RefCell, RefMut},
     collections::{HashMap, HashSet},
     ffi::{OsStr, OsString},
     io::{Cursor, Empty, Sink},
-    marker::PhantomPinned,
-    num::Wrapping,
     path::{Path, PathBuf},
-    sync::atomic::{
-        AtomicBool, AtomicI8, AtomicI16, AtomicI32, AtomicI64, AtomicIsize, AtomicU8, AtomicU16,
-        AtomicU32, AtomicU64, AtomicUsize, Ordering,
-    },
     sync::{Mutex, OnceLock, RwLock},
-    time::Duration,
 };
 
-impl<T> IsDefault for Wrapping<T>
-where
-    T: IsDefault,
-{
-    /// Returns `true` if the inner value is default.
-    #[inline]
-    fn is_default(&self) -> bool {
-        self.0.is_default()
-    }
-}
-
 unit_impl!(Empty);
-unit_impl!(PhantomPinned);
 unit_impl!(Sink);
-
-macro_rules! atomic_impl {
-    ($t:ty, $v:expr) => {
-        impl IsDefault for $t {
-            #[doc = concat!("Returns `true` if self is `", stringify!($v), "`.")]
-            #[inline]
-            fn is_default(&self) -> bool {
-                matches!(self.load(Ordering::Relaxed), $v)
-            }
-        }
-    };
-}
-
-atomic_impl!(AtomicBool, false);
-
-atomic_impl!(AtomicI8, 0i8);
-atomic_impl!(AtomicI16, 0i16);
-atomic_impl!(AtomicI32, 0i32);
-atomic_impl!(AtomicI64, 0i64);
-atomic_impl!(AtomicIsize, 0isize);
-
-atomic_impl!(AtomicU8, 0u8);
-atomic_impl!(AtomicU16, 0u16);
-atomic_impl!(AtomicU32, 0u32);
-atomic_impl!(AtomicU64, 0u64);
-atomic_impl!(AtomicUsize, 0usize);
 
 is_empty_impl!(OsStr);
 is_empty_impl!(OsString);
@@ -74,61 +28,12 @@ macro_rules! path_impl {
 path_impl!(Path);
 path_impl!(PathBuf);
 
-impl IsDefault for Duration {
-    /// Returns `true` if self is zero.
-    #[inline]
-    fn is_default(&self) -> bool {
-        self.is_zero()
-    }
-}
-
 is_empty_impl_t!(HashSet);
 is_empty_impl_k_v!(HashMap);
 
-macro_rules! lock_impl {
-    ($t:ident, $lock:ident) => {
-        impl<T> IsDefault for $t<T>
-        where
-            T: IsDefault + ?Sized,
-        {
-            /// Returns `true` if the inner value is default.
-            #[doc = concat!("Always return false if `self.", stringify!($lock), "()` returns an error.")]
-            #[inline]
-            fn is_default(&self) -> bool {
-                self.$lock().map_or(false, |v| v.is_default())
-            }
-        }
-    };
-}
-
-lock_impl!(RefCell, try_borrow);
 lock_impl!(RwLock, try_read);
 lock_impl!(Mutex, try_lock);
 
-impl<T> IsDefault for Cell<T>
-where
-    T: Copy + IsDefault,
-{
-    /// Returns `true` if the inner value is default.
-    #[inline]
-    fn is_default(&self) -> bool {
-        self.get().is_default()
-    }
-}
-
-macro_rules! once_impl {
-    ($t:ident) => {
-        impl<T> IsDefault for $t<T> {
-            /// Returns `true` if self is uninitialized.
-            #[inline]
-            fn is_default(&self) -> bool {
-                matches!(self.get(), None)
-            }
-        }
-    };
-}
-
-once_impl!(OnceCell);
 once_impl!(OnceLock);
 
 impl<T> IsDefault for Cursor<T> {
@@ -138,9 +43,6 @@ impl<T> IsDefault for Cursor<T> {
         matches!(self.position(), 0u64)
     }
 }
-
-ref_impl!(Ref<'_, T>);
-ref_impl!(RefMut<'_, T>);
 
 #[cfg(feature = "bstr")]
 mod feature_bstr {

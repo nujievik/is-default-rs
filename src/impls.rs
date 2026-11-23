@@ -34,21 +34,7 @@ macro_rules! is_empty_impl {
     };
 }
 
-macro_rules! ref_impl {
-    ($t:ty) => {
-        impl<T> IsDefault for $t
-        where
-            T: IsDefault + ?Sized,
-        {
-            /// Returns `true` if `T` is default.
-            #[inline]
-            fn is_default(&self) -> bool {
-                (**self).is_default()
-            }
-        }
-    };
-}
-
+#[allow(unused_macros)]
 macro_rules! is_empty_impl_t {
     ($t:ident) => {
         impl<T> IsDefault for $t<T> {
@@ -61,6 +47,7 @@ macro_rules! is_empty_impl_t {
     };
 }
 
+#[allow(unused_macros)]
 macro_rules! is_empty_impl_k_v {
     ($t:ident) => {
         impl<K, V> IsDefault for $t<K, V> {
@@ -68,6 +55,34 @@ macro_rules! is_empty_impl_k_v {
             #[inline]
             fn is_default(&self) -> bool {
                 self.is_empty()
+            }
+        }
+    };
+}
+
+macro_rules! lock_impl {
+    ($t:ident, $lock:ident) => {
+        impl<T> IsDefault for $t<T>
+        where
+            T: IsDefault + ?Sized,
+        {
+            /// Returns `true` if the inner value is default.
+            #[doc = concat!("Always return false if `self.", stringify!($lock), "()` returns an error.")]
+            #[inline]
+            fn is_default(&self) -> bool {
+                self.$lock().map_or(false, |v| v.is_default())
+            }
+        }
+    };
+}
+
+macro_rules! once_impl {
+    ($t:ident) => {
+        impl<T> IsDefault for $t<T> {
+            /// Returns `true` if self is uninitialized.
+            #[inline]
+            fn is_default(&self) -> bool {
+                matches!(self.get(), None)
             }
         }
     };

@@ -3,6 +3,16 @@
 #![cfg_attr(feature = "f16", feature(f16))]
 #![cfg_attr(feature = "f128", feature(f128))]
 
+use core::{
+    cell::{Cell, OnceCell, RefCell},
+    marker::PhantomPinned,
+    num::Wrapping,
+    sync::atomic::{
+        AtomicBool, AtomicI8, AtomicI16, AtomicI32, AtomicI64, AtomicIsize, AtomicU8, AtomicU16,
+        AtomicU32, AtomicU64, AtomicUsize,
+    },
+    time::Duration,
+};
 use is_default::IsDefault;
 
 macro_rules! test {
@@ -19,6 +29,8 @@ macro_rules! test {
         }
     };
 }
+
+test!(phantom_pinned, PhantomPinned, PhantomPinned;);
 
 test!(bool, false; true);
 test!(char, '\x00'; 'a', char::MAX);
@@ -46,6 +58,41 @@ test!(u64, 0u64; u64::MAX, 1u64);
 test!(u128, 0u128; u128::MAX, 1u128);
 test!(usize, 0usize; usize::MAX, 1usize);
 
+test!(wrapping, Wrapping::<u8>, Wrapping(0u8); Wrapping(1u8));
+
+test!(atomic_bool, AtomicBool, AtomicBool::new(false); AtomicBool::new(true));
+
+test!(atomic_i8, AtomicI8, AtomicI8::new(0); AtomicI8::new(i8::MAX), AtomicI8::new(1));
+test!(atomic_i16, AtomicI16, AtomicI16::new(0); AtomicI16::new(i16::MAX), AtomicI16::new(1));
+test!(atomic_i32, AtomicI32, AtomicI32::new(0); AtomicI32::new(i32::MAX), AtomicI32::new(1));
+test!(atomic_i64, AtomicI64, AtomicI64::new(0); AtomicI64::new(i64::MAX), AtomicI64::new(1));
+test!(atomic_isize, AtomicIsize, AtomicIsize::new(0); AtomicIsize::new(isize::MAX), AtomicIsize::new(1));
+
+test!(atomic_u8, AtomicU8, AtomicU8::new(0); AtomicU8::new(u8::MAX), AtomicU8::new(1));
+test!(atomic_u16, AtomicU16, AtomicU16::new(0); AtomicU16::new(u16::MAX), AtomicU16::new(1));
+test!(atomic_u32, AtomicU32, AtomicU32::new(0); AtomicU32::new(u32::MAX), AtomicU32::new(1));
+test!(atomic_u64, AtomicU64, AtomicU64::new(0); AtomicU64::new(u64::MAX), AtomicU64::new(1));
+test!(atomic_usize, AtomicUsize, AtomicUsize::new(0); AtomicUsize::new(usize::MAX), AtomicUsize::new(1));
+
+test!(cell, Cell::<u8>, Cell::new(0u8); Cell::new(1u8));
+
+test!(ref_cell, RefCell::<u8>, RefCell::new(0u8); RefCell::new(1u8));
+
+macro_rules! test_once {
+    ($fn:ident, $ty:ty) => {
+        #[test]
+        fn $fn() {
+            let v = <$ty>::default();
+            assert!(v.is_default());
+
+            v.set(0u8).unwrap();
+            assert!(!v.is_default());
+        }
+    };
+}
+
+test_once!(once_cell, OnceCell::<u8>);
+
 macro_rules! test_borrowed {
     ($fn:ident, $true:expr; $( $false:expr ),* ) => {
         #[test]
@@ -60,6 +107,7 @@ test_borrowed!(str, ""; "x");
 test_borrowed!(c_str, c""; c"x");
 
 test!(option, Option::<u8>, None::<u8>; Some(0u8));
+test!(duration, Duration, Duration::ZERO; Duration::new(1, 0));
 
 test!(slice, &[u8], &[0u8]; &[1u8]);
 test!(array, [u8; 0], [0u8]; [1u8]);
@@ -169,40 +217,15 @@ mod alloc_types {
 mod std_types {
     use is_default::IsDefault;
     use std::{
-        cell::{Cell, OnceCell, RefCell},
         collections::{HashMap, HashSet},
         ffi::{OsStr, OsString},
         io::{self, Cursor, Empty, Sink},
-        marker::PhantomPinned,
-        num::Wrapping,
         path::{Path, PathBuf},
-        sync::atomic::{
-            AtomicBool, AtomicI8, AtomicI16, AtomicI32, AtomicI64, AtomicIsize, AtomicU8,
-            AtomicU16, AtomicU32, AtomicU64, AtomicUsize,
-        },
         sync::{Mutex, OnceLock, RwLock},
-        time::Duration,
     };
 
-    test!(wrapping, Wrapping::<u8>, Wrapping(0u8); Wrapping(1u8));
-
     test!(empty, Empty, io::empty(););
-    test!(phantom_pinned, PhantomPinned, PhantomPinned;);
     test!(sink, Sink, io::sink(););
-
-    test!(atomic_bool, AtomicBool, AtomicBool::new(false); AtomicBool::new(true));
-
-    test!(atomic_i8, AtomicI8, AtomicI8::new(0); AtomicI8::new(i8::MAX), AtomicI8::new(1));
-    test!(atomic_i16, AtomicI16, AtomicI16::new(0); AtomicI16::new(i16::MAX), AtomicI16::new(1));
-    test!(atomic_i32, AtomicI32, AtomicI32::new(0); AtomicI32::new(i32::MAX), AtomicI32::new(1));
-    test!(atomic_i64, AtomicI64, AtomicI64::new(0); AtomicI64::new(i64::MAX), AtomicI64::new(1));
-    test!(atomic_isize, AtomicIsize, AtomicIsize::new(0); AtomicIsize::new(isize::MAX), AtomicIsize::new(1));
-
-    test!(atomic_u8, AtomicU8, AtomicU8::new(0); AtomicU8::new(u8::MAX), AtomicU8::new(1));
-    test!(atomic_u16, AtomicU16, AtomicU16::new(0); AtomicU16::new(u16::MAX), AtomicU16::new(1));
-    test!(atomic_u32, AtomicU32, AtomicU32::new(0); AtomicU32::new(u32::MAX), AtomicU32::new(1));
-    test!(atomic_u64, AtomicU64, AtomicU64::new(0); AtomicU64::new(u64::MAX), AtomicU64::new(1));
-    test!(atomic_usize, AtomicUsize, AtomicUsize::new(0); AtomicUsize::new(usize::MAX), AtomicUsize::new(1));
 
     test!(os_string, OsString, OsString::from(""); OsString::from("x"));
 
@@ -211,31 +234,13 @@ mod std_types {
     test_borrowed!(path, Path::new(""); Path::new("x"));
     test!(path_buf, PathBuf, PathBuf::from(""); PathBuf::from("x"));
 
-    test!(duration, Duration, Duration::ZERO; Duration::new(1, 0));
-
     test!(hash_set, HashSet::<u8>, HashSet::<u8>::new(); HashSet::from([0u8]));
 
     test!(hash_map, HashMap::<u8, u8>, HashMap::<u8, u8>::new(); HashMap::<u8, u8>::from([(0u8, 0u8)]));
 
-    test!(cell, Cell::<u8>, Cell::new(0u8); Cell::new(1u8));
-
-    test!(ref_cell, RefCell::<u8>, RefCell::new(0u8); RefCell::new(1u8));
     test!(rw_lock, RwLock::<u8>, RwLock::new(0u8); RwLock::new(1u8));
     test!(mutex, Mutex::<u8>, Mutex::new(0u8); Mutex::new(1u8));
 
-    macro_rules! test_once {
-        ($fn:ident, $ty:ty) => {
-            #[test]
-            fn $fn() {
-                let v = <$ty>::default();
-                assert!(v.is_default());
-                v.set(0u8).unwrap();
-                assert!(!v.is_default());
-            }
-        };
-    }
-
-    test_once!(once_cell, OnceCell::<u8>);
     test_once!(once_lock, OnceLock::<u8>);
 
     #[test]
