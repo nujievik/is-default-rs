@@ -34,32 +34,6 @@ macro_rules! is_empty_impl {
     };
 }
 
-#[allow(unused_macros)]
-macro_rules! is_empty_impl_t {
-    ($t:ident) => {
-        impl<T> IsDefault for $t<T> {
-            /// Returns `true` if self is empty.
-            #[inline]
-            fn is_default(&self) -> bool {
-                self.is_empty()
-            }
-        }
-    };
-}
-
-#[allow(unused_macros)]
-macro_rules! is_empty_impl_k_v {
-    ($t:ident) => {
-        impl<K, V> IsDefault for $t<K, V> {
-            /// Returns `true` if self is empty.
-            #[inline]
-            fn is_default(&self) -> bool {
-                self.is_empty()
-            }
-        }
-    };
-}
-
 macro_rules! lock_impl {
     ($t:ident, $lock:ident) => {
         impl<T> IsDefault for $t<T>

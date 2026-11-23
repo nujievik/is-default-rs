@@ -71,13 +71,31 @@ impl<T: ?Sized> IsDefault for sync::Weak<T> {
     }
 }
 
+is_empty_impl!(CString);
+is_empty_impl!(String);
+
+macro_rules! is_empty_impl_t {
+    ($t:ident) => {
+        impl<T> IsDefault for $t<T> {
+            /// Returns `true` if self is empty.
+            #[inline]
+            fn is_default(&self) -> bool {
+                self.is_empty()
+            }
+        }
+    };
+}
+
 is_empty_impl_t!(BTreeSet);
 is_empty_impl_t!(BinaryHeap);
 is_empty_impl_t!(LinkedList);
 is_empty_impl_t!(Vec);
 is_empty_impl_t!(VecDeque);
 
-is_empty_impl_k_v!(BTreeMap);
-
-is_empty_impl!(CString);
-is_empty_impl!(String);
+impl<K, V> IsDefault for BTreeMap<K, V> {
+    /// Returns `true` if self is empty.
+    #[inline]
+    fn is_default(&self) -> bool {
+        self.is_empty()
+    }
+}

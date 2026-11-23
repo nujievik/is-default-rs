@@ -28,8 +28,21 @@ macro_rules! path_impl {
 path_impl!(Path);
 path_impl!(PathBuf);
 
-is_empty_impl_t!(HashSet);
-is_empty_impl_k_v!(HashMap);
+impl<T, S> IsDefault for HashSet<T, S> {
+    /// Returns `true` if self is empty.
+    #[inline]
+    fn is_default(&self) -> bool {
+        self.is_empty()
+    }
+}
+
+impl<K, V, S> IsDefault for HashMap<K, V, S> {
+    /// Returns `true` if self is empty.
+    #[inline]
+    fn is_default(&self) -> bool {
+        self.is_empty()
+    }
+}
 
 lock_impl!(RwLock, try_read);
 lock_impl!(Mutex, try_lock);
